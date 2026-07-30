@@ -1,0 +1,121 @@
+# QuickWord — implementation plan
+
+*2026-07-29. Pure Kotlin + Jetpack Compose, Android-only. Supersedes the
+Flutter-shell framing in RESEARCH.md (decision refuted & confirmed — see
+refutation tables). Design system: PRODUCT.md + DESIGN.md.*
+
+## Architecture
+
+Single Gradle module `:app` (no premature multi-module), Kotlin 2.x, AGP 8.x,
+Compose BOM + Material 3, minSdk 26, targetSdk latest.
+
+```
+app/src/main/kotlin/dev/quickword/
+  lookup/      ProcessTextActivity (translucent trampoline: PROCESS_TEXT + SEND)
+               LookupNotifier (BigTextStyle + [Thesaurus][Open][★] actions)
+               ThesaurusActionReceiver (swaps notification content in place)
+  data/        QuickwordDb (Room, prebuilt DB via createFromFile)
+               words/senses/synonyms DAOs; HistoryDao (app-writable DB)
+               DbDownloader (first-run download + unzip + verify from GitHub Releases)
+               WikipediaApi (REST summary; no-hit fallback + word-page card)
+  ui/          theme/ (Color.kt, Type.kt from DESIGN.md)
+               search/ (home: search field + history)
+               word/ (entry screen: POS groups, senses, synonym chips, wiki card)
+               settings/ (theme override, channel-health banner, about/licenses)
+```
+
+Key mechanics (from reference app + refutations):
+
+- **Trampoline**: exported activity, `Theme.Translucent.NoTitleBar`,
+  `noHistory`, `excludeFromRecents`, `taskAffinity=""` → query DB → post
+  notification → `finish()`. No Compose, no setContent — nothing draws.
+- **Lookup query**: exact + prefix on `words.word COLLATE NOCASE` (indexed).
+  **No FTS in MVP** (refuted — see table). Normalization: lowercase, strip
+  punctuation, fall back to stemmed retry (drop -s/-ed/-ing) before "no hit".
+- **Notification channel health** (refuted claim → requirement): on app open,
+  check `NotificationManager.getNotificationChannel("lookup").importance`;
+  if < HIGH show a banner deep-linking to channel settings. Trampoline with
+  notifications blocked falls back to launching the word page directly.
+- **Two DBs**: read-only dictionary DB (downloaded, replaceable on language
+  change) + tiny app DB (history/favourites) — avoids migrating 60MB of
+  dictionary on every app-schema change (reference app's single-DB migration
+  pain).
+- *M1 deviation:* dictionary DB is accessed via plain `android.database.sqlite`
+  (3 queries), not Room — Room's prebuilt-DB schema validation fights
+  hand-built SQLite for no benefit on a read-only store. Room reconsidered at
+  M5 for the app-owned history DB only. Dev builds bundle a 15-word fixture DB
+  as an asset; the downloader ships at M6 with the release artifact.
+- **Thesaurus action**: `showsUserInterface=false` broadcast → re-`notify()`
+  same ID with synonym content. No app launch.
+
+## Data pipeline (`etl/`, Python, runs in CI not on device)
+
+kaikki.org English JSONL + OEWN 2024 SQLite → filter → lean SQLite
+(`words`, `senses`, `synonyms`, indexes, VACUUM) → zstd → GitHub Release
+asset. **Measured 2026-07-29 (v1 filter):** 1,446,437 words / 1,724,400
+senses / 631,509 synonyms, 280 MB raw — above the researched 120–200 MB
+estimate; tightening the filter (drop rare/hyphenless-variant entries) is an
+M6 packaging concern. OEWN synonym union deferred to M4. License of output:
+CC BY-SA 4.0 + attribution files.
+
+## Milestones
+
+| # | Deliverable | Gate |
+|---|---|---|
+| M0 ✅ | Gradle scaffold, ktlint+detekt+lint wired to `check`, `tool/verify.sh` green (CI deferred to first push) | mutation-tested 2026-07-29: test/ktlint/detekt/lint each redden `check` |
+| M1 ✅ | ETL v1 (1.45M words / 280 MB measured, assertions pinned); search UI + word page over fixture DB; Roborazzi rig (4 shots reviewed) | ETL row-count/size assertions ✅ |
+| M2 ✅ | Trampoline + notification path; full-phrase-first lookup (user policy); channel-health banner; 3 Robolectric contract tests | verified on Android 16 emulator 2026-07-29: PROCESS_TEXT → heads-up notification w/ [Open][Share], screenshots in app/shots/ |
+| M3 | Word page (POS groups, senses, chips) + Roborazzi rig both themes | every shot reviewed |
+| M4 | Thesaurus action + thesaurus view | |
+| M5 | Wikipedia no-hit fallback + word-page card | |
+| M6 | History/favourites/settings/TTS/share; F-Droid/Play packaging | |
+
+## Refutation table (plan-refute protocol, codex-cli 0.144.6 cross-model)
+
+### Round 1 — Kotlin vs Flutter (2026-07-29)
+
+| Claim | Verdict | Disposition |
+|---|---|---|
+| Flutter shell adds ~8–20 MB APK vs Compose | **REFUTED** — official figures: 4.8 MB minimal Flutter vs 2.97 MB Compose ≈ 1.8 MB delta | Size dropped as an argument; decision rests on single-language/toolchain + native hot path |
+| Compose Multiplatform is a viable later desktop path | UNREFUTED | Multi-platform door stays open without Flutter |
+
+### Round 2 — architecture (2026-07-29)
+
+| Claim | Verdict | Disposition |
+|---|---|---|
+| Framework SQLite has FTS5 on API ≥24 | **REFUTED** — AOSP builds enable only FTS3/4; Room docs point FTS5 at the bundled driver | MVP uses indexed prefix lookup, no FTS. Definition full-text search deferred; if built, use `androidx.sqlite:sqlite-bundled` |
+| POST_NOTIFICATIONS granted ⇒ heads-up lookup notification works (API 31–36) | **REFUTED** — channel importance is user-controlled, app cannot restore it | Channel-health check + settings deep-link banner is a requirement, not polish; blocked-notification fallback opens word page |
+| Roborazzi + RNG renders Compose M3 to PNG headlessly on Linux JVM, maintained, rig-grade | UNREFUTED | Visual rig as planned (kotlin-verify-loop) |
+| mise provisions JDK+Gradle; Android SDK must be separate | **REFUTED (favorably)** — mise registry maps `android-sdk` (vfox plugin); `mise use android-sdk@latest` is documented | mise.toml may pin the SDK too; this machine already has platforms 34–36, so local config uses system SDK, CI may use mise |
+| kaikki+OEWN ETL ≈120–200 MB raw / 45–70 MB compressed, ~1M senses | UNREFUTED | Stands; pin real numbers in ETL assertions at M1 |
+
+Protocol notes: refuters ran `codex exec --sandbox read-only` with context
+asymmetry (claim only, never planner reasoning). Unrefuted ≠ proven —
+agreement is not evidence; numbers get re-pinned by runnable assertions as
+soon as the thing exists.
+
+## M0 notes (learned during scaffold, 2026-07-29)
+
+- **AGP 9 has built-in Kotlin**: `org.jetbrains.kotlin.android` must NOT be
+  applied (hard error). Bundled KGP is 2.2.10 — the
+  `org.jetbrains.kotlin.plugin.compose` version in libs.versions.toml is
+  pinned to 2.2.10 to match; upgrade both together (buildscript-classpath
+  route per AGP release notes) or not at all.
+- Toolchain: Gradle 9.6.1 wrapper (AGP 9.3.1 requires ≥9.5), Temurin 21 via
+  mise, compileSdk/targetSdk 37 (SDK package now versioned `android-37.0` —
+  minor-version scheme).
+- ktlint (official style) and detekt disagree on max line length (140 vs
+  120); aligned at 120 via `.editorconfig` `max_line_length`.
+- Lint's version-currency checks (`AndroidGradlePluginVersion`,
+  `NewerVersionAvailable`, `GradleDependency`) are disabled: as
+  warnings-as-errors they redden the gate whenever upstream releases,
+  which checks the calendar, not the code. Version bumps are a bot's job.
+- Composable naming: exempted in both tools (`.editorconfig` ktlint key +
+  `config/detekt/detekt.yml` `ignoreAnnotated: [Composable]`).
+
+## Open questions
+
+- ~~App id~~ — resolved 2026-07-29: `io.github.jtrv.quickword` (user choice,
+  F-Droid-friendly GitHub pattern).
+- Font licensing check at M3: Literata + Inter are OFL, fine to bundle; keep
+  OFL notices in about/licenses screen.

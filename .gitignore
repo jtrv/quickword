@@ -1,0 +1,7 @@
+reference/
+build/
+shots/
+.gradle/
+.kotlin/
+local.properties
+*.hprof
