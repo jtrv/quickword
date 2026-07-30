@@ -65,8 +65,8 @@ CC BY-SA 4.0 + attribution files.
 | M0 ✅ | Gradle scaffold, ktlint+detekt+lint wired to `check`, `tool/verify.sh` green (CI deferred to first push) | mutation-tested 2026-07-29: test/ktlint/detekt/lint each redden `check` |
 | M1 ✅ | ETL v1 (1.45M words / 280 MB measured, assertions pinned); search UI + word page over fixture DB; Roborazzi rig (4 shots reviewed) | ETL row-count/size assertions ✅ |
 | M2 ✅ | Trampoline + notification path; full-phrase-first lookup (user policy); channel-health banner; 3 Robolectric contract tests | verified on Android 16 emulator 2026-07-29: PROCESS_TEXT → heads-up notification w/ [Open][Share], screenshots in app/shots/ |
-| M3 | Word page (POS groups, senses, chips) + Roborazzi rig both themes | every shot reviewed |
-| M4 | Thesaurus action + thesaurus view | |
+| M3 ✅ | Literata+Inter typography (bundled OFL variable fonts), word page polish | shots re-recorded + reviewed both themes |
+| M4 ✅ | Thesaurus notification action (in-place swap, no app launch) + expandable synonym chips | 3 notifier contract tests; button verified on emulator (app/shots/device_thesaurus_swap.png) |
 | M5 | Wikipedia no-hit fallback + word-page card | |
 | M6 | History/favourites/settings/TTS/share; F-Droid/Play packaging | |
 
