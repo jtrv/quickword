@@ -1,0 +1,12 @@
+# Deltas on top of detekt's default config (buildUponDefaultConfig = true).
+# Keep this file minimal — every entry needs a reason.
+
+naming:
+  FunctionNaming:
+    # Composables are PascalCase by convention.
+    ignoreAnnotated: ['Composable']
+
+style:
+  MagicNumber:
+    # Same convention as the @Suppress in Color.kt: palettes are literals.
+    ignoreAnnotated: ['Composable']

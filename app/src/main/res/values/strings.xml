@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">QuickWord</string>
+    <string name="search_hint">Search the dictionary</string>
+    <string name="no_results">No entry for “%1$s”</string>
+    <string name="process_text_label">QuickWord</string>
+    <string name="channel_name">Word lookups</string>
+    <string name="channel_description">Definitions shown when you look up a selected word</string>
+    <string name="action_open">Open</string>
+    <string name="action_share">Share</string>
+    <string name="notifications_muted">Lookups won’t appear: notifications are muted</string>
+    <string name="notifications_muted_fix">Fix</string>
+</resources>

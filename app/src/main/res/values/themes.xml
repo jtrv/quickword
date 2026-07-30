@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose owns all theming; this only avoids a flash before setContent. -->
+    <style name="Theme.QuickWord" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+
+    <!-- Trampoline: nothing may draw — no background, no animation, no preview.
+         This is the fix for the reference app's white-flash wart. -->
+    <style name="Theme.QuickWord.Trampoline" parent="android:Theme.Translucent.NoTitleBar">
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowDisablePreview">true</item>
+    </style>
+</resources>
