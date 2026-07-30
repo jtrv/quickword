@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import io.github.jtrv.quickword.data.WordEntry
+import io.github.jtrv.quickword.ui.theme.Literata
 
 private const val MAX_CHIPS = 6
 
@@ -65,6 +66,7 @@ private fun PosGroup(
     Text(
         text = entry.pos,
         style = MaterialTheme.typography.titleSmall,
+        fontFamily = Literata, // DESIGN.md: the only italic serif in the app
         fontStyle = FontStyle.Italic,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(top = 20.dp, bottom = 4.dp),

@@ -55,6 +55,7 @@ fun QuickWordTheme(
 ) {
     MaterialTheme(
         colorScheme = if (darkTheme) DarkColors else LightColors,
+        typography = QuickWordTypography,
         content = content,
     )
 }
