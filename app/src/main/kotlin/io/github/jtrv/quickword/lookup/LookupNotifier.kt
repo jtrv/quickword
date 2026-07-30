@@ -57,7 +57,8 @@ class LookupNotifier(
                     entry.senses.map { if (multiPos) "${entry.pos} · ${it.gloss}" else it.gloss }
                 }.take(MAX_GLOSSES)
                 .joinToString("\n")
-        post(head.word, "${head.word} · ${head.pos}", definition)
+        val hasSynonyms = entries.any { it.synonyms.isNotEmpty() }
+        post(head.word, "${head.word} · ${head.pos}", definition, withThesaurus = hasSynonyms)
     }
 
     fun showNoEntry(query: String) {
@@ -65,10 +66,27 @@ class LookupNotifier(
         post(query, query, context.getString(R.string.no_results, query))
     }
 
+    /** In-place swap to synonyms — the Thesaurus action's target state. */
+    fun showSynonyms(
+        word: String,
+        entries: List<WordEntry>,
+    ) {
+        ensureChannel()
+        val synonyms = entries.flatMap { it.synonyms }.distinct()
+        val text =
+            if (synonyms.isEmpty()) {
+                context.getString(R.string.no_synonyms, word)
+            } else {
+                synonyms.joinToString(" · ")
+            }
+        post(word, context.getString(R.string.synonyms_title, word), text)
+    }
+
     private fun post(
         word: String,
         title: String,
         text: String,
+        withThesaurus: Boolean = false,
     ) {
         val openIntent =
             PendingIntent.getActivity(
@@ -94,7 +112,7 @@ class LookupNotifier(
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
 
-        val notification =
+        val builder =
             Notification
                 .Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification)
@@ -104,10 +122,22 @@ class LookupNotifier(
                 .setContentIntent(openIntent)
                 .setAutoCancel(true)
                 .setTimeoutAfter(TIMEOUT_MS)
-                .addAction(actionOf(R.string.action_open, openIntent))
-                .addAction(actionOf(R.string.action_share, shareIntent))
-                .build()
-        manager.notify(NOTIFICATION_ID, notification)
+        if (withThesaurus) {
+            val thesaurusIntent =
+                PendingIntent.getBroadcast(
+                    context,
+                    2,
+                    Intent(context, ThesaurusActionReceiver::class.java)
+                        .setAction(ThesaurusActionReceiver.ACTION)
+                        .putExtra(ThesaurusActionReceiver.EXTRA_WORD, word),
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                )
+            builder.addAction(actionOf(R.string.action_thesaurus, thesaurusIntent))
+        }
+        builder
+            .addAction(actionOf(R.string.action_open, openIntent))
+            .addAction(actionOf(R.string.action_share, shareIntent))
+        manager.notify(NOTIFICATION_ID, builder.build())
     }
 
     private fun actionOf(

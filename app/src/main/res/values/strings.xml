@@ -7,6 +7,9 @@
     <string name="channel_name">Word lookups</string>
     <string name="channel_description">Definitions shown when you look up a selected word</string>
     <string name="action_open">Open</string>
+    <string name="action_thesaurus">Thesaurus</string>
+    <string name="synonyms_title">%1$s · synonyms</string>
+    <string name="no_synonyms">No synonyms recorded for “%1$s”</string>
     <string name="action_share">Share</string>
     <string name="notifications_muted">Lookups won’t appear: notifications are muted</string>
     <string name="notifications_muted_fix">Fix</string>

@@ -16,6 +16,10 @@ import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
@@ -98,8 +102,10 @@ private fun PosGroup(
         }
     }
     if (entry.synonyms.isNotEmpty()) {
+        var expanded by rememberSaveable(entry.id) { mutableStateOf(false) }
+        val shown = if (expanded) entry.synonyms else entry.synonyms.take(MAX_CHIPS)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            entry.synonyms.take(MAX_CHIPS).forEach { synonym ->
+            shown.forEach { synonym ->
                 SuggestionChip(
                     onClick = { onSynonymClick(synonym) },
                     label = { Text(synonym) },
@@ -112,8 +118,8 @@ private fun PosGroup(
                 )
             }
             val overflow = entry.synonyms.size - MAX_CHIPS
-            if (overflow > 0) {
-                SuggestionChip(onClick = {}, label = { Text("+$overflow") })
+            if (!expanded && overflow > 0) {
+                SuggestionChip(onClick = { expanded = true }, label = { Text("+$overflow") })
             }
         }
     }

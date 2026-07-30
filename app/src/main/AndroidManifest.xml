@@ -29,6 +29,10 @@
             </intent-filter>
         </activity>
 
+        <receiver
+            android:name=".lookup.ThesaurusActionReceiver"
+            android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
