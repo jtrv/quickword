@@ -1,0 +1,44 @@
+# QuickWord toolchain + tasks. `mise install` once, then `mise run <task>`.
+
+[tools]
+java = "temurin-21"
+gradle = "9"          # bootstrap only; builds go through ./gradlew once it exists
+python = "3.12"
+uv = "latest"
+
+# Android SDK: system install (platforms 34-36 present). CI can instead:
+#   mise use android-sdk@latest   (vfox plugin, per refutation table in PLAN.md)
+# JAVA_HOME is exported automatically by mise's java tool.
+
+[tasks.verify]
+description = "The whole gate: format/lint/test across all Gradle builds (see kotlin-verify-loop skill)"
+run = "tool/verify.sh"
+
+[tasks.palette]
+description = "Recompute DESIGN.md palette hex values + WCAG contrast checks"
+run = "python3 tool/palette.py"
+
+[tasks.build]
+description = "Debug APK"
+run = "./gradlew --console=plain assembleDebug"
+
+[tasks.install]
+description = "Build + install debug APK on connected device"
+run = "./gradlew --console=plain installDebug"
+
+[tasks.test]
+description = "Unit tests only (narrow loop)"
+run = "./gradlew --console=plain testDebugUnitTest"
+
+[tasks.lint]
+description = "Style/lint only (narrow loop): ktlint + detekt + Android Lint"
+run = "./gradlew --console=plain ktlintCheck detekt lintDebug"
+
+[tasks.shots]
+description = "Roborazzi: record real screens to PNGs for visual review (both themes)"
+run = "./gradlew --console=plain :app:testDebugUnitTest -Pshots --tests '*Shots'"
+
+[tasks.etl]
+description = "Build the dictionary SQLite from kaikki + OEWN (see PLAN.md M1)"
+dir = "etl"
+run = "uv run build_db.py"
