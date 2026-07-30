@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:label="@string/app_name"
@@ -31,6 +32,10 @@
 
         <receiver
             android:name=".lookup.ThesaurusActionReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".lookup.FavouriteActionReceiver"
             android:exported="false" />
 
         <activity

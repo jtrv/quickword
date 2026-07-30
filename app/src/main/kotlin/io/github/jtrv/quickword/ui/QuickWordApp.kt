@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -23,28 +24,51 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.jtrv.quickword.R
 import io.github.jtrv.quickword.data.DictionaryRepository
+import io.github.jtrv.quickword.data.HistoryEntry
+import io.github.jtrv.quickword.data.HistoryStore
 import io.github.jtrv.quickword.data.Suggestion
-import io.github.jtrv.quickword.data.WordEntry
+import io.github.jtrv.quickword.data.WikipediaApi
 import io.github.jtrv.quickword.ui.search.SearchScreen
+import io.github.jtrv.quickword.ui.word.WikiScreen
 import io.github.jtrv.quickword.ui.word.WordScreen
+import kotlinx.coroutines.launch
 
 // ponytail: two screens, hoisted state, no navigation library. Revisit if a
 // third destination appears (M5 history/settings).
 @Composable
 fun QuickWordApp(
     repository: DictionaryRepository,
+    history: HistoryStore,
     initialWord: String? = null,
     notificationsMuted: Boolean = false,
     onFixNotifications: () -> Unit = {},
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     var openWord by rememberSaveable { mutableStateOf(initialWord) }
+    var historyVersion by rememberSaveable { mutableStateOf(0) }
+    val scope = rememberCoroutineScope()
 
     val suggestions by produceState(emptyList<Suggestion>(), query) {
         value = repository.suggest(query)
     }
-    val entries by produceState(emptyList<WordEntry>(), openWord) {
-        value = openWord?.let { repository.entriesFor(it) } ?: emptyList()
+    val recents by produceState(emptyList<HistoryEntry>(), openWord, historyVersion) {
+        value = history.recent()
+    }
+    // Dictionary first; Wikipedia only after a confirmed no-hit (proper nouns).
+    val lookup by produceState<LookupResult?>(null, openWord) {
+        value = null
+        val word = openWord ?: return@produceState
+        val entries = repository.entriesFor(word)
+        value =
+            if (entries.isNotEmpty()) {
+                history.recordLookup(entries.first().word)
+                LookupResult.Entries(entries)
+            } else {
+                LookupResult.Wiki(WikipediaApi().summary(word))
+            }
+    }
+    val favourite by produceState(false, openWord, historyVersion) {
+        value = openWord?.let { history.isFavourite(it) } ?: false
     }
 
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -54,20 +78,36 @@ fun QuickWordApp(
             if (notificationsMuted) {
                 MutedBanner(onFixNotifications)
             }
-            val word = openWord
-            if (word == null || entries.isEmpty()) {
-                SearchScreen(
-                    query = query,
-                    suggestions = suggestions,
-                    onQueryChange = { query = it },
-                    onWordSelected = { openWord = it },
-                )
-            } else {
-                BackHandler { openWord = null }
-                WordScreen(
-                    entries = entries,
-                    onSynonymClick = { openWord = it },
-                )
+            val result = if (openWord == null) null else lookup
+            val wikiSummary = (result as? LookupResult.Wiki)?.summary
+            when {
+                result is LookupResult.Entries -> {
+                    BackHandler { openWord = null }
+                    WordScreen(
+                        entries = result.entries,
+                        favourite = favourite,
+                        onToggleFavourite = {
+                            val word = result.entries.first().word
+                            scope.launch {
+                                history.setFavourite(word, !favourite)
+                                historyVersion++
+                            }
+                        },
+                        onSynonymClick = { openWord = it },
+                    )
+                }
+                wikiSummary != null -> {
+                    BackHandler { openWord = null }
+                    WikiScreen(summary = wikiSummary)
+                }
+                else ->
+                    SearchScreen(
+                        query = query,
+                        suggestions = suggestions,
+                        recents = recents,
+                        onQueryChange = { query = it },
+                        onWordSelected = { openWord = it },
+                    )
             }
         }
     }

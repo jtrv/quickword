@@ -36,17 +36,17 @@ class LookupNotifierTest {
             .notification
 
     @Test
-    fun `entry with synonyms gets a Thesaurus action first`() {
+    fun `entry with synonyms gets the full DESIGN action budget`() {
         notifier.showEntries(listOf(entry))
         val actions = posted().actions.map { it.title.toString() }
-        assertEquals(listOf("Thesaurus", "Open", "Share"), actions)
+        assertEquals(listOf("Thesaurus", "Open", "★ Save"), actions)
     }
 
     @Test
     fun `entry without synonyms gets no Thesaurus action`() {
         notifier.showEntries(listOf(entry.copy(synonyms = emptyList())))
         val actions = posted().actions.map { it.title.toString() }
-        assertEquals(listOf("Open", "Share"), actions)
+        assertEquals(listOf("Open", "★ Save"), actions)
     }
 
     @Test

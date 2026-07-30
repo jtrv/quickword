@@ -2,6 +2,7 @@ package io.github.jtrv.quickword.ui.search
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -23,12 +24,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.jtrv.quickword.R
+import io.github.jtrv.quickword.data.HistoryEntry
 import io.github.jtrv.quickword.data.Suggestion
 
 @Composable
 fun SearchScreen(
     query: String,
     suggestions: List<Suggestion>,
+    recents: List<HistoryEntry>,
     onQueryChange: (String) -> Unit,
     onWordSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -58,6 +61,39 @@ fun SearchScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 24.dp),
             )
+        }
+        if (query.isBlank() && recents.isNotEmpty()) {
+            Text(
+                text = stringResource(R.string.recent_heading),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+            )
+            LazyColumn {
+                items(recents, key = { it.word }) { entry ->
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { onWordSelected(entry.word) }
+                                .padding(vertical = 10.dp),
+                    ) {
+                        Text(
+                            text = entry.word,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (entry.favourite) {
+                            Text(
+                                text = "★",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                }
+            }
         }
         LazyColumn {
             items(suggestions, key = { it.word }) { suggestion ->

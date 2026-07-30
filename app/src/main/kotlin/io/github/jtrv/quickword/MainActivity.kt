@@ -11,29 +11,32 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.mutableStateOf
 import io.github.jtrv.quickword.data.DictionaryRepository
-import io.github.jtrv.quickword.lookup.LookupNotifier
+import io.github.jtrv.quickword.data.HistoryStore
+import io.github.jtrv.quickword.lookup.LookupChannel
 import io.github.jtrv.quickword.ui.QuickWordApp
 import io.github.jtrv.quickword.ui.theme.QuickWordTheme
 
 class MainActivity : ComponentActivity() {
     private val permissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { refreshMuted() }
-    private val notifier by lazy { LookupNotifier(applicationContext) }
+    private val channel by lazy { LookupChannel(applicationContext) }
     private val muted = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        notifier.ensureChannel()
+        channel.ensure()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissionRequest.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
         val repository = DictionaryRepository(applicationContext)
+        val history = HistoryStore(applicationContext)
         val initialWord = intent.getStringExtra(EXTRA_WORD)
         setContent {
             QuickWordTheme {
                 QuickWordApp(
                     repository = repository,
+                    history = history,
                     initialWord = initialWord,
                     notificationsMuted = muted.value,
                     onFixNotifications = ::openChannelSettings,
@@ -48,14 +51,14 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun refreshMuted() {
-        muted.value = !notifier.canNotify() || notifier.channelDegraded()
+        muted.value = !channel.canNotify() || channel.degraded()
     }
 
     private fun openChannelSettings() {
         startActivity(
             Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
                 .putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
-                .putExtra(Settings.EXTRA_CHANNEL_ID, LookupNotifier.CHANNEL_ID),
+                .putExtra(Settings.EXTRA_CHANNEL_ID, LookupChannel.CHANNEL_ID),
         )
     }
 

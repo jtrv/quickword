@@ -6,6 +6,14 @@ naming:
     # Composables are PascalCase by convention.
     ignoreAnnotated: ['Composable']
 
+complexity:
+  # Compose UI trees are declarative layout, not imperative logic — length
+  # and parameter-count heuristics measure the wrong thing there.
+  LongMethod:
+    ignoreAnnotated: ['Composable']
+  LongParameterList:
+    ignoreAnnotated: ['Composable']
+
 style:
   MagicNumber:
     # Same convention as the @Suppress in Color.kt: palettes are literals.

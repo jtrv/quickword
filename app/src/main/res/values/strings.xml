@@ -8,8 +8,14 @@
     <string name="channel_description">Definitions shown when you look up a selected word</string>
     <string name="action_open">Open</string>
     <string name="action_thesaurus">Thesaurus</string>
+    <string name="action_favourite">★ Save</string>
+    <string name="favourite_toggle">Toggle favourite</string>
+    <string name="recent_heading">Recent</string>
     <string name="synonyms_title">%1$s · synonyms</string>
     <string name="no_synonyms">No synonyms recorded for “%1$s”</string>
+    <string name="wiki_title">%1$s · Wikipedia</string>
+    <string name="wiki_attribution">From Wikipedia (CC BY-SA)</string>
+    <string name="wiki_read_more">Read more</string>
     <string name="action_share">Share</string>
     <string name="notifications_muted">Lookups won’t appear: notifications are muted</string>
     <string name="notifications_muted_fix">Fix</string>

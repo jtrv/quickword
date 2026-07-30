@@ -11,6 +11,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
@@ -20,9 +24,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import io.github.jtrv.quickword.R
 import io.github.jtrv.quickword.data.WordEntry
 import io.github.jtrv.quickword.ui.theme.Literata
 
@@ -31,6 +38,8 @@ private const val MAX_CHIPS = 6
 @Composable
 fun WordScreen(
     entries: List<WordEntry>,
+    favourite: Boolean,
+    onToggleFavourite: () -> Unit,
     onSynonymClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -43,12 +52,29 @@ fun WordScreen(
                 .padding(horizontal = 16.dp)
                 .widthIn(max = 640.dp),
     ) {
-        Text(
-            text = headword.word,
-            style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(top = 20.dp),
-        )
+        Row(verticalAlignment = Alignment.Top) {
+            Text(
+                text = headword.word,
+                style = MaterialTheme.typography.displaySmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = 20.dp).weight(1f),
+            )
+            IconButton(
+                onClick = onToggleFavourite,
+                modifier = Modifier.padding(top = 20.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = stringResource(R.string.favourite_toggle),
+                    tint =
+                        if (favourite) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.outline
+                        },
+                )
+            }
+        }
         headword.ipa?.let {
             Text(
                 text = it,

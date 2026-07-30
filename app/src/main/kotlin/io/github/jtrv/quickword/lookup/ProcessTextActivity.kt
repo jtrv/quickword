@@ -6,6 +6,8 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import io.github.jtrv.quickword.MainActivity
 import io.github.jtrv.quickword.data.DictionaryRepository
+import io.github.jtrv.quickword.data.HistoryStore
+import io.github.jtrv.quickword.data.WikipediaApi
 import kotlinx.coroutines.launch
 
 /**
@@ -31,7 +33,7 @@ class ProcessTextActivity : ComponentActivity() {
         }
 
         val notifier = LookupNotifier(applicationContext)
-        if (!notifier.canNotify()) {
+        if (!LookupChannel(applicationContext).canNotify()) {
             // Notifications blocked: honest fallback — open the app at the word.
             startActivity(
                 Intent(this, MainActivity::class.java)
@@ -44,10 +46,20 @@ class ProcessTextActivity : ComponentActivity() {
         val repository = DictionaryRepository(applicationContext)
         lifecycleScope.launch {
             val entries = repository.lookup(candidates)
-            if (entries.isEmpty()) {
-                notifier.showNoEntry(candidates.first())
-            } else {
-                notifier.showEntries(entries)
+            when {
+                entries.isNotEmpty() -> {
+                    HistoryStore(applicationContext).recordLookup(entries.first().word)
+                    notifier.showEntries(entries)
+                }
+                else -> {
+                    // No dictionary hit: proper nouns and names live on Wikipedia.
+                    val wiki = WikipediaApi().summary(candidates.first())
+                    if (wiki != null) {
+                        notifier.showWiki(wiki)
+                    } else {
+                        notifier.showNoEntry(candidates.first())
+                    }
+                }
             }
             finish()
         }

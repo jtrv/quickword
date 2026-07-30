@@ -10,6 +10,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import io.github.jtrv.quickword.data.DictionaryRepository
+import io.github.jtrv.quickword.data.HistoryStore
 import io.github.jtrv.quickword.ui.theme.QuickWordTheme
 import org.junit.Rule
 import org.junit.Test
@@ -35,12 +36,14 @@ class AppShots {
 
     private fun repo() = DictionaryRepository(ApplicationProvider.getApplicationContext())
 
+    private fun history() = HistoryStore(ApplicationProvider.getApplicationContext())
+
     private fun searchShot(
         dark: Boolean,
         name: String,
     ) {
         compose.setContent {
-            QuickWordTheme(darkTheme = dark) { QuickWordApp(repository = repo()) }
+            QuickWordTheme(darkTheme = dark) { QuickWordApp(repository = repo(), history = history()) }
         }
         compose.onNode(hasSetTextAction()).performTextInput("qu")
         // Proof of state: a suggestion row only present once the DB answered.
@@ -55,7 +58,9 @@ class AppShots {
         name: String,
     ) {
         compose.setContent {
-            QuickWordTheme(darkTheme = dark) { QuickWordApp(repository = repo(), initialWord = "dog") }
+            QuickWordTheme(darkTheme = dark) {
+                QuickWordApp(repository = repo(), history = history(), initialWord = "dog")
+            }
         }
         // Proof of state: gloss text + a synonym chip exist only on the word page.
         compose.waitUntil(timeoutMs) {

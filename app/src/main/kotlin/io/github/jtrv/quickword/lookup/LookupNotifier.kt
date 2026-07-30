@@ -1,7 +1,6 @@
 package io.github.jtrv.quickword.lookup
 
 import android.app.Notification
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -18,35 +17,10 @@ class LookupNotifier(
     private val context: Context,
 ) {
     private val manager = context.getSystemService(NotificationManager::class.java)
-
-    fun ensureChannel() {
-        manager.createNotificationChannel(
-            NotificationChannel(
-                CHANNEL_ID,
-                context.getString(R.string.channel_name),
-                NotificationManager.IMPORTANCE_HIGH,
-            ).apply {
-                description = context.getString(R.string.channel_description)
-                setSound(null, null)
-            },
-        )
-    }
-
-    /** True when notifications will actually surface (permission + channel not muted by user). */
-    fun canNotify(): Boolean {
-        val channelImportance = manager.getNotificationChannel(CHANNEL_ID)?.importance
-        return manager.areNotificationsEnabled() &&
-            channelImportance != NotificationManager.IMPORTANCE_NONE
-    }
-
-    /** Channel exists but the user downgraded it below heads-up level. */
-    fun channelDegraded(): Boolean {
-        val channel = manager.getNotificationChannel(CHANNEL_ID) ?: return false
-        return channel.importance in 1 until NotificationManager.IMPORTANCE_HIGH
-    }
+    private val channel = LookupChannel(context)
 
     fun showEntries(entries: List<WordEntry>) {
-        ensureChannel()
+        channel.ensure()
         val head = entries.first()
         // Prefix each gloss with its POS only when several POS compete —
         // otherwise the title ("word · noun") already says it.
@@ -58,12 +32,28 @@ class LookupNotifier(
                 }.take(MAX_GLOSSES)
                 .joinToString("\n")
         val hasSynonyms = entries.any { it.synonyms.isNotEmpty() }
-        post(head.word, "${head.word} · ${head.pos}", definition, withThesaurus = hasSynonyms)
+        post(
+            head.word,
+            "${head.word} · ${head.pos}",
+            definition,
+            withThesaurus = hasSynonyms,
+            withFavourite = true,
+        )
     }
 
     fun showNoEntry(query: String) {
-        ensureChannel()
+        channel.ensure()
         post(query, query, context.getString(R.string.no_results, query))
+    }
+
+    /** Wikipedia fallback (no dictionary hit): extract + attribution. */
+    fun showWiki(summary: io.github.jtrv.quickword.data.WikiSummary) {
+        channel.ensure()
+        post(
+            summary.title,
+            context.getString(R.string.wiki_title, summary.title),
+            summary.extract,
+        )
     }
 
     /** In-place swap to synonyms — the Thesaurus action's target state. */
@@ -71,7 +61,7 @@ class LookupNotifier(
         word: String,
         entries: List<WordEntry>,
     ) {
-        ensureChannel()
+        channel.ensure()
         val synonyms = entries.flatMap { it.synonyms }.distinct()
         val text =
             if (synonyms.isEmpty()) {
@@ -82,39 +72,45 @@ class LookupNotifier(
         post(word, context.getString(R.string.synonyms_title, word), text)
     }
 
+    private fun openIntent(word: String): PendingIntent =
+        PendingIntent.getActivity(
+            context,
+            REQ_OPEN,
+            Intent(context, MainActivity::class.java)
+                .putExtra(MainActivity.EXTRA_WORD, word)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+    private fun shareIntent(
+        word: String,
+        text: String,
+    ): PendingIntent =
+        PendingIntent.getActivity(
+            context,
+            REQ_SHARE,
+            Intent
+                .createChooser(
+                    Intent(Intent.ACTION_SEND)
+                        .setType("text/plain")
+                        .putExtra(Intent.EXTRA_SUBJECT, word)
+                        .putExtra(Intent.EXTRA_TEXT, "$word\n\n$text"),
+                    null,
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
     private fun post(
         word: String,
         title: String,
         text: String,
         withThesaurus: Boolean = false,
+        withFavourite: Boolean = false,
     ) {
-        val openIntent =
-            PendingIntent.getActivity(
-                context,
-                0,
-                Intent(context, MainActivity::class.java)
-                    .putExtra(MainActivity.EXTRA_WORD, word)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-            )
-        val shareIntent =
-            PendingIntent.getActivity(
-                context,
-                1,
-                Intent
-                    .createChooser(
-                        Intent(Intent.ACTION_SEND)
-                            .setType("text/plain")
-                            .putExtra(Intent.EXTRA_SUBJECT, word)
-                            .putExtra(Intent.EXTRA_TEXT, "$word\n\n$text"),
-                        null,
-                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-            )
-
+        val openIntent = openIntent(word)
         val builder =
             Notification
-                .Builder(context, CHANNEL_ID)
+                .Builder(context, LookupChannel.CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(title)
                 .setContentText(text.lineSequence().first())
@@ -126,7 +122,7 @@ class LookupNotifier(
             val thesaurusIntent =
                 PendingIntent.getBroadcast(
                     context,
-                    2,
+                    REQ_THESAURUS,
                     Intent(context, ThesaurusActionReceiver::class.java)
                         .setAction(ThesaurusActionReceiver.ACTION)
                         .putExtra(ThesaurusActionReceiver.EXTRA_WORD, word),
@@ -134,9 +130,22 @@ class LookupNotifier(
                 )
             builder.addAction(actionOf(R.string.action_thesaurus, thesaurusIntent))
         }
-        builder
-            .addAction(actionOf(R.string.action_open, openIntent))
-            .addAction(actionOf(R.string.action_share, shareIntent))
+        builder.addAction(actionOf(R.string.action_open, openIntent))
+        if (withFavourite) {
+            // DESIGN.md action budget: [Thesaurus] [Open] [★]; Share lives in-app.
+            val favIntent =
+                PendingIntent.getBroadcast(
+                    context,
+                    REQ_FAVOURITE,
+                    Intent(context, FavouriteActionReceiver::class.java)
+                        .setAction(FavouriteActionReceiver.ACTION)
+                        .putExtra(FavouriteActionReceiver.EXTRA_WORD, word),
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                )
+            builder.addAction(actionOf(R.string.action_favourite, favIntent))
+        } else {
+            builder.addAction(actionOf(R.string.action_share, shareIntent(word, text)))
+        }
         manager.notify(NOTIFICATION_ID, builder.build())
     }
 
@@ -146,9 +155,12 @@ class LookupNotifier(
     ): Notification.Action = Notification.Action.Builder(null, context.getString(label), intent).build()
 
     companion object {
-        const val CHANNEL_ID = "lookup"
         const val NOTIFICATION_ID = 1
         private const val MAX_GLOSSES = 2
         private const val TIMEOUT_MS = 30_000L
+        private const val REQ_OPEN = 0
+        private const val REQ_SHARE = 1
+        private const val REQ_THESAURUS = 2
+        private const val REQ_FAVOURITE = 3
     }
 }

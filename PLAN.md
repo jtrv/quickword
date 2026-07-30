@@ -67,8 +67,8 @@ CC BY-SA 4.0 + attribution files.
 | M2 ✅ | Trampoline + notification path; full-phrase-first lookup (user policy); channel-health banner; 3 Robolectric contract tests | verified on Android 16 emulator 2026-07-29: PROCESS_TEXT → heads-up notification w/ [Open][Share], screenshots in app/shots/ |
 | M3 ✅ | Literata+Inter typography (bundled OFL variable fonts), word page polish | shots re-recorded + reviewed both themes |
 | M4 ✅ | Thesaurus notification action (in-place swap, no app launch) + expandable synonym chips | 3 notifier contract tests; button verified on emulator (app/shots/device_thesaurus_swap.png) |
-| M5 | Wikipedia no-hit fallback + word-page card | |
-| M6 | History/favourites/settings/TTS/share; F-Droid/Play packaging | |
+| M5 ✅ | Wikipedia no-hit fallback (notification + in-app page, live-verified with "Nairobi"); history/favourites (recents on empty search, ★ page toggle, ★ Save notification action — tap-verified via uiautomator) | notifier/history/wiki-parse contract tests |
+| M6 | Settings/TTS; ETL filter tightening; DB release artifact + first-run downloader; branding; F-Droid/Play packaging | |
 
 ## Refutation table (plan-refute protocol, codex-cli 0.144.6 cross-model)
 
