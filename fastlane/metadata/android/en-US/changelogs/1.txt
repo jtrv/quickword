@@ -1,0 +1,3 @@
+Initial release: selection-menu lookup notifications with Thesaurus/Open/Save
+actions, offline Wiktionary dictionary, Wikipedia fallback, recents and
+favourites, TTS.

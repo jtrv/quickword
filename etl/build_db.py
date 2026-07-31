@@ -48,6 +48,10 @@ CREATE INDEX idx_syn_word ON synonyms(word_id);
 
 # Senses carrying only these tag combinations add noise, not meaning.
 SKIP_TAGS = {"obsolete", "misspelling"}
+# Affix entries pollute prefix-search suggestions ("un-", "-ness"). Proper
+# nouns (pos=name) are deliberately KEPT: PRODUCT.md principle 4 — offline is
+# the default; the Wikipedia fallback is garnish, not a dependency.
+SKIP_POS = {"prefix", "suffix", "infix", "interfix", "circumfix", "affix"}
 
 
 def entry_rows(entry):
@@ -92,7 +96,7 @@ def build(input_path: Path, output_path: Path, dev: bool) -> dict:
             except json.JSONDecodeError:
                 continue
             word, pos = e.get("word"), e.get("pos")
-            if not word or not pos or len(word) > 64:
+            if not word or not pos or len(word) > 64 or pos in SKIP_POS:
                 continue
             rows = list(entry_rows(e))
             if not rows:

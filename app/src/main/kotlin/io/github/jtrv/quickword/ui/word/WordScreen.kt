@@ -1,5 +1,6 @@
 package io.github.jtrv.quickword.ui.word
 
+import android.speech.tts.TextToSpeech
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -19,13 +20,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
@@ -75,16 +80,52 @@ fun WordScreen(
                 )
             }
         }
-        headword.ipa?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp),
-            )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            headword.ipa?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+            SpeakButton(headword.word)
         }
         entries.forEach { entry -> PosGroup(entry, onSynonymClick) }
         Spacer(Modifier.padding(bottom = 24.dp))
+    }
+}
+
+// TTS held per word page; created lazily on first tap, released on dispose.
+@Composable
+private fun SpeakButton(word: String) {
+    val context = LocalContext.current
+    val tts = remember { mutableStateOf<TextToSpeech?>(null) }
+    DisposableEffect(Unit) {
+        onDispose {
+            tts.value?.shutdown()
+        }
+    }
+    TextButton(onClick = {
+        val engine = tts.value
+        if (engine != null) {
+            engine.speak(word, TextToSpeech.QUEUE_FLUSH, null, word)
+        } else {
+            var pending: TextToSpeech? = null
+            pending =
+                TextToSpeech(context) { status ->
+                    if (status == TextToSpeech.SUCCESS) {
+                        tts.value = pending
+                        pending?.speak(word, TextToSpeech.QUEUE_FLUSH, null, word)
+                    }
+                }
+        }
+    }) {
+        Text(
+            text = "♪ " + stringResource(R.string.listen),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 }
 

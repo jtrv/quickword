@@ -1,0 +1,17 @@
+QuickWord answers "what does this word mean" with the least possible
+interruption: select a word in any app, tap QuickWord in the text-selection
+menu, and the definition appears as a notification — no app switch, and it
+works offline.
+
+Features:
+
+• Lookup from any app's text-selection menu or share sheet
+• Notification actions: Thesaurus (swaps to synonyms in place), Open, Save
+• 1.4 million words from the English Wiktionary (CC BY-SA), fully offline
+• Wikipedia fallback for names and places (with attribution)
+• Serif-typeset word pages, prefix search, recents and favourites
+• Pronunciation (IPA + text-to-speech)
+• No ads, no tracking, no accounts. MIT licensed.
+
+The full dictionary (~120 MB) is downloaded once on first run; a small
+starter dictionary is bundled so the app works immediately.

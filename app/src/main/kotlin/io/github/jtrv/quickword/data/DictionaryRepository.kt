@@ -38,9 +38,23 @@ class DictionaryRepository(
     private fun open(): SQLiteDatabase =
         db ?: synchronized(this) {
             db ?: SQLiteDatabase
-                .openDatabase(ensureExtracted().path, null, SQLiteDatabase.OPEN_READONLY)
+                .openDatabase(resolveDb().path, null, SQLiteDatabase.OPEN_READONLY)
                 .also { db = it }
         }
+
+    // Full downloaded dictionary wins; bundled fixture is the fallback tier.
+    private fun resolveDb(): File {
+        val full = File(context.noBackupFilesDir, DictionaryDownloader.FULL_DB_NAME)
+        return if (full.exists()) full else ensureExtracted()
+    }
+
+    /** Close so the next query re-resolves (called after a full-DB download). */
+    fun reopen() {
+        synchronized(this) {
+            db?.close()
+            db = null
+        }
+    }
 
     // The asset is the source of truth; re-extract when its size changes
     // (cheap proxy for a new dictionary version — real versioning at M6).

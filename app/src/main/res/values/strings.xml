@@ -16,6 +16,12 @@
     <string name="wiki_title">%1$s · Wikipedia</string>
     <string name="wiki_attribution">From Wikipedia (CC BY-SA)</string>
     <string name="wiki_read_more">Read more</string>
+    <string name="dict_banner">Starter dictionary — get the full one (≈120 MB)</string>
+    <string name="dict_download">Download</string>
+    <string name="dict_downloading">Downloading… %1$d%%</string>
+    <string name="dict_downloading_indeterminate">Downloading…</string>
+    <string name="dict_failed">Download failed — try again</string>
+    <string name="listen">Listen</string>
     <string name="action_share">Share</string>
     <string name="notifications_muted">Lookups won’t appear: notifications are muted</string>
     <string name="notifications_muted_fix">Fix</string>
