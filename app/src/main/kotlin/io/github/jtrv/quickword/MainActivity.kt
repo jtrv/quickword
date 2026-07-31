@@ -10,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.mutableStateOf
+import io.github.jtrv.quickword.data.DictionaryDownloader
 import io.github.jtrv.quickword.data.DictionaryRepository
 import io.github.jtrv.quickword.data.HistoryStore
 import io.github.jtrv.quickword.lookup.LookupChannel
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity() {
                 QuickWordApp(
                     repository = repository,
                     history = history,
+                    downloader = DictionaryDownloader(applicationContext),
                     initialWord = initialWord,
                     notificationsMuted = muted.value,
                     onFixNotifications = ::openChannelSettings,
@@ -64,6 +66,6 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         // Deep-link target for the notification's Open action (M2).
-        const val EXTRA_WORD = "io.github.jtrv.quickword.extra.WORD"
+        const val EXTRA_WORD = io.github.jtrv.quickword.lookup.EXTRA_WORD
     }
 }

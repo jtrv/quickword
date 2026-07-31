@@ -27,6 +27,6 @@ class FavouriteActionReceiver : BroadcastReceiver() {
 
     companion object {
         const val ACTION = "io.github.jtrv.quickword.action.FAVOURITE"
-        const val EXTRA_WORD = "io.github.jtrv.quickword.extra.WORD"
+        const val EXTRA_WORD = io.github.jtrv.quickword.lookup.EXTRA_WORD
     }
 }

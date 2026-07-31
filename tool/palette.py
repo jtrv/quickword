@@ -91,6 +91,29 @@ for name, (L, C, H) in ROLES.items():
     rgb[name] = oklch_to_srgb(L, c2, H)
     print(f"{name:26s} oklch({L:.3f} {c2:.3f} {H}) {hexs(rgb[name])}")
 
+def check_kotlin(rgb):
+    """Geiger fix g2: fail when ui/theme/Color.kt drifts from this palette."""
+    import re, pathlib
+    src = pathlib.Path(__file__).parent.parent / "app/src/main/kotlin/io/github/jtrv/quickword/ui/theme/Color.kt"
+    kotlin = {}
+    for m in re.finditer(r"val (Light|Dark)(\w+) = Color\(0xFF([0-9A-F]{6})\)", src.read_text()):
+        prefix = "L." if m.group(1) == "Light" else "D."
+        role = m.group(2)[0].lower() + m.group(2)[1:]
+        kotlin[prefix + role] = "#" + m.group(3)
+    errors = []
+    for name, rgb_val in rgb.items():
+        expect = hexs(rgb_val)
+        got = kotlin.pop(name, None)
+        if got is None:
+            errors.append(f"missing in Color.kt: {name} (expect {expect})")
+        elif got != expect:
+            errors.append(f"drift: {name} Color.kt={got} palette={expect}")
+    errors += [f"unknown const in Color.kt: {k}" for k in kotlin]
+    for e in errors:
+        print(f"  MIRROR FAIL {e}")
+    return not errors
+
+
 PAIRS = [  # (fg, bg, min)
     ("L.onSurface", "L.surface", 4.5), ("L.onSurface", "L.surfaceContainer", 4.5),
     ("L.onSurfaceVariant", "L.surface", 4.5), ("L.onPrimary", "L.primary", 4.5),
@@ -111,3 +134,8 @@ for fg, bg, need in PAIRS:
     if r < need: fails += 1
     print(f"  {ok} {r:5.2f}:1  {fg} on {bg} (need {need})")
 print(f"\n{fails} failures" if fails else "\nAll pairs pass.")
+
+import sys
+mirror_ok = check_kotlin(rgb)
+print("Color.kt mirror: OK" if mirror_ok else "Color.kt mirror: DRIFT")
+sys.exit(1 if (fails or not mirror_ok) else 0)

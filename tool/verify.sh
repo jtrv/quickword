@@ -99,6 +99,24 @@ for pkg in "${DART_PKGS[@]}"; do
   [ -d "$pkg/test" ] && run_step "test $pkg" dart_test_step "$pkg" "$tool"
 done
 
+# --- Cross-language contracts (geiger findings g1+g2, refuted & confirmed) ----
+# g2: DESIGN.md / Color.kt / palette.py three-way mirror
+[ -f tool/palette.py ] && run_step "palette + Color.kt mirror" python3 tool/palette.py
+# g1: ETL schema <-> app queries via the checked-in fixture asset. Rebuild the
+# fixture from sample.jsonl with the CURRENT ETL and logical-diff it against
+# the asset — a schema change in build_db.py without a regenerated asset is red.
+if [ -f etl/build_db.py ] && [ -f app/src/main/assets/dictionary/quickword-en.db ]; then
+  fixture_parity() {
+    local tmp="$REPO_ROOT/build/fixture-parity.db"
+    mkdir -p "$REPO_ROOT/build"
+    python3 etl/build_db.py --input etl/sample.jsonl --output "$tmp" --dev >/dev/null &&
+      diff <(sqlite3 "$tmp" .dump) <(sqlite3 app/src/main/assets/dictionary/quickword-en.db .dump) >/dev/null ||
+      { echo "  fixture asset is stale vs current ETL — regenerate:"; \
+        echo "  python3 etl/build_db.py --input etl/sample.jsonl --output app/src/main/assets/dictionary/quickword-en.db --dev"; return 1; }
+  }
+  run_step "ETL <-> fixture asset parity" fixture_parity
+fi
+
 # --- Kotlin / Android ----------------------------------------------------------
 # `check` is the Gradle lifecycle verification task; ktlint, detekt, Android Lint
 # and unit tests all attach to it. Configure the plugins in the build, not here.

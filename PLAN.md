@@ -68,7 +68,18 @@ CC BY-SA 4.0 + attribution files.
 | M3 ✅ | Literata+Inter typography (bundled OFL variable fonts), word page polish | shots re-recorded + reviewed both themes |
 | M4 ✅ | Thesaurus notification action (in-place swap, no app launch) + expandable synonym chips | 3 notifier contract tests; button verified on emulator (app/shots/device_thesaurus_swap.png) |
 | M5 ✅ | Wikipedia no-hit fallback (notification + in-app page, live-verified with "Nairobi"); history/favourites (recents on empty search, ★ page toggle, ★ Save notification action — tap-verified via uiautomator) | notifier/history/wiki-parse contract tests |
-| M6 | Settings/TTS; ETL filter tightening; DB release artifact + first-run downloader; branding; F-Droid/Play packaging | |
+| M6 ✅* | TTS (word page); affix filter (proper nouns kept per PRODUCT principle 4 — measured: names are only ~14 MB of gloss); DB release `db-en-v1` (267 MB raw / 122 MB gz) + first-run downloader (5 contract tests, verified swap-in); README + fastlane metadata | *deferred: settings screen (no toggle worth a screen yet), Play packaging |
+
+## Geiger audit (2026-07-29, direct-read mode — repo < 50 files)
+
+| Finding | Class | Evidence | Disposition |
+|---|---|---|---|
+| ETL schema ↔ DictionaryRepository SQL (cross-language hidden contract) | **erosion** (managed-manual), refuter UNREFUTED | schema lives in build_db.py, queries in Kotlin; nothing forced fixture regeneration | **Fixed**: verify.sh rebuilds fixture from sample.jsonl and dump-diffs vs asset (mutation-tested) |
+| DESIGN.md ↔ Color.kt ↔ palette.py three-way mirror | **erosion** (managed-manual), refuter UNREFUTED | sync documented in CLAUDE.md, unenforced | **Fixed**: `palette.py --check` compares Color.kt literals, in verify.sh (mutation-tested) |
+| EXTRA_WORD constant tri-duplicated | minor | 3 self-consistent copies of one string | **Fixed**: single `lookup/Extras.kt` constant |
+| root ↔ lookup package cycle (LookupNotifier/trampoline name MainActivity; MainActivity uses LookupChannel) | intentional | Android idiom — notification intents must name the target activity | Keep; revisit only if the app package grows |
+| `data` package fan-in from all packages | intentional | it is the data layer; fan-in is its job | — |
+| Tests ↔ sample.jsonl word coupling | intentional | fixture exists for exactly this | — |
 
 ## Refutation table (plan-refute protocol, codex-cli 0.144.6 cross-model)
 
