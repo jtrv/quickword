@@ -22,6 +22,14 @@ run = "python3 tool/palette.py"
 description = "Debug APK"
 run = "./gradlew --console=plain assembleDebug"
 
+[tasks."build:release"]
+description = "Release APK (R8-minified; real signing only if keystore.properties exists)"
+run = "./gradlew --console=plain assembleRelease"
+
+[tasks.bundle]
+description = "Play upload AAB → app/build/outputs/bundle/release/app-release.aab"
+run = "./gradlew --console=plain bundleRelease"
+
 [tasks.install]
 description = "Build + install debug APK on connected device"
 run = "./gradlew --console=plain installDebug"

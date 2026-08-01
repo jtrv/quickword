@@ -33,6 +33,21 @@ mise run verify      # the whole gate: palette/schema parity, ktlint, detekt, li
 mise run build       # debug APK
 mise run shots       # render screens to PNGs (Roborazzi)
 mise run etl         # rebuild the dictionary DB from a kaikki dump
+mise run build:release  # R8-minified release APK
+mise run bundle         # Play upload AAB
+```
+
+### Release signing
+
+Release builds are debug-signed unless a `keystore.properties` exists at the
+repo root (untracked, alongside the `.jks` it names) — so the release build
+works for anyone, and only uploads need the real key:
+
+```properties
+storeFile=quickword-upload.jks
+storePassword=…
+keyAlias=upload
+keyPassword=…
 ```
 
 Android SDK: platform 37. See `PLAN.md` for architecture (and its

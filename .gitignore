@@ -6,3 +6,6 @@ shots/
 local.properties
 *.hprof
 mise.local.toml
+keystore.properties
+*.jks
+*.keystore

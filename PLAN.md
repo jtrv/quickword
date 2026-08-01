@@ -68,7 +68,8 @@ CC BY-SA 4.0 + attribution files.
 | M3 ✅ | Literata+Inter typography (bundled OFL variable fonts), word page polish | shots re-recorded + reviewed both themes |
 | M4 ✅ | Thesaurus notification action (in-place swap, no app launch) + expandable synonym chips | 3 notifier contract tests; button verified on emulator (app/shots/device_thesaurus_swap.png) |
 | M5 ✅ | Wikipedia no-hit fallback (notification + in-app page, live-verified with "Nairobi"); history/favourites (recents on empty search, ★ page toggle, ★ Save notification action — tap-verified via uiautomator) | notifier/history/wiki-parse contract tests |
-| M6 ✅* | TTS (word page); affix filter (proper nouns kept per PRODUCT principle 4 — measured: names are only ~14 MB of gloss); DB release `db-en-v1` (267 MB raw / 122 MB gz) + first-run downloader (5 contract tests, verified swap-in); README + fastlane metadata | *deferred: settings screen (no toggle worth a screen yet), Play packaging |
+| M6 ✅* | TTS (word page); affix filter (proper nouns kept per PRODUCT principle 4 — measured: names are only ~14 MB of gloss); DB release `db-en-v1` (267 MB raw / 122 MB gz) + first-run downloader (5 contract tests, verified swap-in); README + fastlane metadata | *deferred: settings screen (no toggle worth a screen yet) |
+| M7 ▶ | Play packaging: release build type (R8 + resource shrinking, no keep rules needed — 2.2 MB APK / 4.0 MB AAB), optional keystore signing via untracked `keystore.properties`, `bundleRelease` in CI. Release APK smoke-tested on emulator: PROCESS_TEXT notification, search, word page (fonts survive resource obfuscation) | remaining: upload keystore + Play Console listing |
 
 ## Geiger audit (2026-07-29, direct-read mode — repo < 50 files)
 
