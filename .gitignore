@@ -5,3 +5,4 @@ shots/
 .kotlin/
 local.properties
 *.hprof
+mise.local.toml
