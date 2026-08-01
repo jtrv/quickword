@@ -62,7 +62,7 @@ CC BY-SA 4.0 + attribution files.
 
 | # | Deliverable | Gate |
 |---|---|---|
-| M0 ✅ | Gradle scaffold, ktlint+detekt+lint wired to `check`, `tool/verify.sh` green (CI deferred to first push) | mutation-tested 2026-07-29: test/ktlint/detekt/lint each redden `check` |
+| M0 ✅ | Gradle scaffold, ktlint+detekt+lint wired to `check`, `tool/verify.sh` green; CI live (GitHub Actions runs the same gate, first run green 2026-07-31) | mutation-tested 2026-07-29: test/ktlint/detekt/lint each redden `check` |
 | M1 ✅ | ETL v1 (1.45M words / 280 MB measured, assertions pinned); search UI + word page over fixture DB; Roborazzi rig (4 shots reviewed) | ETL row-count/size assertions ✅ |
 | M2 ✅ | Trampoline + notification path; full-phrase-first lookup (user policy); channel-health banner; 3 Robolectric contract tests | verified on Android 16 emulator 2026-07-29: PROCESS_TEXT → heads-up notification w/ [Open][Share], screenshots in app/shots/ |
 | M3 ✅ | Literata+Inter typography (bundled OFL variable fonts), word page polish | shots re-recorded + reviewed both themes |
