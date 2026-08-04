@@ -68,6 +68,12 @@ class DictionaryDownloader(
 
     fun hasFullDictionary(): Boolean = File(context.noBackupFilesDir, FULL_DB_NAME).exists()
 
+    /** Bytes on disk, 0 when only the bundled starter dictionary is present. */
+    fun fullDictionaryBytes(): Long = File(context.noBackupFilesDir, FULL_DB_NAME).length()
+
+    /** Reclaim the download; the bundled starter keeps the app working. */
+    fun removeFullDictionary(): Boolean = File(context.noBackupFilesDir, FULL_DB_NAME).delete()
+
     private fun verify(db: File) {
         SQLiteDatabase.openDatabase(db.path, null, SQLiteDatabase.OPEN_READONLY).use {
             val words =

@@ -3,6 +3,7 @@
     <string name="app_name">QuickWord</string>
     <string name="search_hint">Search the dictionary</string>
     <string name="no_results">No entry for “%1$s”</string>
+    <string name="no_entry_hint">Not in the dictionary, and Wikipedia had nothing either. Check the spelling — or try again once you’re back online.</string>
     <string name="process_text_label">QuickWord</string>
     <string name="channel_name">Word lookups</string>
     <string name="channel_description">Definitions shown when you look up a selected word</string>
@@ -36,4 +37,13 @@
     <string name="about_code_heading">App</string>
     <string name="about_code">QuickWord is free software under the MIT licence. No ads, no analytics, no accounts — nothing you look up leaves your device.</string>
     <string name="about_source">Source code</string>
+    <string name="about_storage_heading">Storage &amp; data</string>
+    <string name="about_dictionary_full">Full dictionary downloaded — %1$s</string>
+    <string name="about_dictionary_starter">Starter dictionary only (bundled with the app)</string>
+    <string name="about_remove_dictionary">Remove download</string>
+    <string name="about_clear_history">Clear recents &amp; favourites</string>
+    <string name="about_clear_confirm_title">Clear recents and favourites?</string>
+    <string name="about_clear_confirm_body">Every word you have looked up or starred will be deleted from this device. This cannot be undone.</string>
+    <string name="about_clear_confirm">Clear</string>
+    <string name="cancel">Cancel</string>
 </resources>

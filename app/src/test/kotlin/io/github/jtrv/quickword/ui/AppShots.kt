@@ -85,6 +85,20 @@ class AppShots {
         compose.onRoot().captureRoboImage("shots/about.png")
     }
 
+    @Test
+    fun noEntry() {
+        compose.setContent {
+            QuickWordTheme(darkTheme = false) {
+                QuickWordApp(repository = repo(), history = history(), initialWord = "zzzznotaword")
+            }
+        }
+        // Proof of state: this copy exists only on the dead-end screen.
+        compose.waitUntil(timeoutMs) {
+            compose.onAllNodesWithText("No entry for", substring = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onRoot().captureRoboImage("shots/no_entry.png")
+    }
+
     @Test fun searchLight() = searchShot(dark = false, name = "search_light")
 
     @Test fun searchDark() = searchShot(dark = true, name = "search_dark")

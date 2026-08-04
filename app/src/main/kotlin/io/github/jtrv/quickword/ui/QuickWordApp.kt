@@ -1,11 +1,13 @@
 package io.github.jtrv.quickword.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -62,6 +64,7 @@ fun QuickWordApp(
         value = history.recent()
     }
     // Dictionary first; Wikipedia only after a confirmed no-hit (proper nouns).
+    // null means still resolving — the Wikipedia leg is a network round trip.
     val lookup by produceState<LookupResult?>(null, openWord) {
         value = null
         val word = openWord ?: return@produceState
@@ -71,7 +74,7 @@ fun QuickWordApp(
                 history.recordLookup(entries.first().word)
                 LookupResult.Entries(entries)
             } else {
-                LookupResult.Wiki(WikipediaApi().summary(word))
+                WikipediaApi().summary(word)?.let(LookupResult::Wiki) ?: LookupResult.None
             }
     }
     val favourite by produceState(false, openWord, historyVersion) {
@@ -91,31 +94,41 @@ fun QuickWordApp(
                     dictVersion++
                 }
             }
-            val result = if (openWord == null) null else lookup
-            val wikiSummary = (result as? LookupResult.Wiki)?.summary
+            val word = openWord
             when {
                 showAbout -> {
                     BackHandler { showAbout = false }
-                    AboutScreen()
-                }
-                result is LookupResult.Entries -> {
-                    BackHandler { openWord = null }
-                    WordScreen(
-                        entries = result.entries,
-                        favourite = favourite,
-                        onToggleFavourite = {
-                            val word = result.entries.first().word
+                    AboutScreen(
+                        // Keyed on dictVersion so removing or downloading the
+                        // full dictionary re-reads the size instead of lying.
+                        dictionaryBytes = remember(dictVersion) { downloader?.fullDictionaryBytes() ?: 0L },
+                        onRemoveDictionary = {
+                            downloader?.removeFullDictionary()
+                            repository.reopen()
+                            dictVersion++
+                        },
+                        onClearHistory = {
                             scope.launch {
-                                history.setFavourite(word, !favourite)
+                                history.clear()
+                                historyVersion++
+                            }
+                        },
+                    )
+                }
+                word != null -> {
+                    BackHandler { openWord = null }
+                    OpenWord(
+                        word = word,
+                        lookup = lookup,
+                        favourite = favourite,
+                        onToggleFavourite = { headword ->
+                            scope.launch {
+                                history.setFavourite(headword, !favourite)
                                 historyVersion++
                             }
                         },
                         onSynonymClick = { openWord = it },
                     )
-                }
-                wikiSummary != null -> {
-                    BackHandler { openWord = null }
-                    WikiScreen(summary = wikiSummary)
                 }
                 else ->
                     SearchScreen(
@@ -128,6 +141,62 @@ fun QuickWordApp(
                     )
             }
         }
+    }
+}
+
+/**
+ * Every outcome of an open word — including "no such word" and "still asking
+ * Wikipedia" — is a screen of its own. Falling through to search instead, as
+ * this once did, stranded anyone who tapped a synonym chip that is not itself
+ * a headword: the tap appeared to do nothing at all.
+ */
+@Composable
+private fun OpenWord(
+    word: String,
+    lookup: LookupResult?,
+    favourite: Boolean,
+    onToggleFavourite: (String) -> Unit,
+    onSynonymClick: (String) -> Unit,
+) {
+    when (lookup) {
+        null -> Resolving()
+        is LookupResult.Entries ->
+            WordScreen(
+                entries = lookup.entries,
+                favourite = favourite,
+                onToggleFavourite = { onToggleFavourite(lookup.entries.first().word) },
+                onSynonymClick = onSynonymClick,
+            )
+        is LookupResult.Wiki -> WikiScreen(summary = lookup.summary)
+        LookupResult.None -> NoEntry(word)
+    }
+}
+
+/** Dictionary hits resolve in a frame; only the Wikipedia leg is ever slow. */
+@Composable
+private fun Resolving() {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun NoEntry(word: String) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.no_results, word),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(top = 32.dp),
+        )
+        Text(
+            text = stringResource(R.string.no_entry_hint),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 8.dp),
+        )
     }
 }
 

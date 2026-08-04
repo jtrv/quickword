@@ -72,6 +72,11 @@ class HistoryStore(
                 .use { it.moveToFirst() && it.getInt(0) == 1 }
         }
 
+    suspend fun clear() =
+        withContext(Dispatchers.IO) {
+            writableDatabase.execSQL("DELETE FROM history")
+        }
+
     suspend fun recent(limit: Int = RECENT_LIMIT): List<HistoryEntry> =
         withContext(Dispatchers.IO) {
             readableDatabase

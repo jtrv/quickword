@@ -71,6 +71,28 @@ CC BY-SA 4.0 + attribution files.
 | M6 ✅* | TTS (word page); affix filter (proper nouns kept per PRODUCT principle 4 — measured: names are only ~14 MB of gloss); DB release `db-en-v1` (267 MB raw / 122 MB gz) + first-run downloader (5 contract tests, verified swap-in); README + fastlane metadata | *deferred: settings screen (no toggle worth a screen yet) |
 | M7 ✅* | Store readiness. Release build type (R8 + resource shrinking, no keep rules needed — 2.2 MB APK / 4.0 MB AAB), optional keystore signing via untracked `keystore.properties`, `bundleRelease` in CI; release APK smoke-tested on emulator (PROCESS_TEXT notification, search, word page — fonts survive resource obfuscation). About screen carrying CC BY-SA attribution and the verbatim OFL texts as APK assets. `PRIVACY.md` (Play requires a policy URL), `RELEASING.md`, listing images generated from app sources by `tool/store-assets.sh` | licence compliance contract-tested (`AboutScreenTest`: entry point reachable + OFL text present in-APK); `mise run verify` green; OFL/CC assets confirmed present in the R8 release APK. *remaining is account-only: upload keystore, Play listing, F-Droid RFP |
 
+| M8 ✅ | Pre-launch functionality audit: no-hit dead end fixed (app was quieter than its own notification), TTS pinned to `Locale.ENGLISH`, TTS engine released when init outlives the screen, storage & data controls (remove the ~120 MB download, clear recents/favourites behind a confirm) | `QuickWordAppTest` mutation-tested — reinstating the fall-through to search reddens it; `mise run verify` green |
+
+## Known gaps at launch (deliberate, not forgotten)
+
+- **Download is all-or-nothing**: `DictionaryDownloader` streams with no resume
+  and no network-type constraint, so a dropped connection at 90% restarts ~120 MB
+  and nothing stops it running on cellular. `DownloadManager` gives resume,
+  metered-network policy and a system progress notification for free — the
+  right fix if this ever generates a complaint, and a rewrite of a working
+  component if it does not.
+- **Launcher icon is still the M0 placeholder** (`ic_launcher_foreground.xml`
+  says so in its own comment). It reads fine at every size and the store assets
+  derive from it, so this is a branding decision, not a blocker.
+- **English only.** The dictionary, the TTS locale and the Wikipedia endpoint
+  are all `en`. Multi-language means a per-language DB release and a picker —
+  a milestone, not a patch.
+- **No definition full-text search** — refuted at plan time (AOSP SQLite has no
+  FTS5); would need `androidx.sqlite:sqlite-bundled`.
+- **No settings screen.** Theme follows the system, notifications are managed by
+  the platform's own channel UI, and storage/data now live on the About screen —
+  there is still no toggle that earns a screen of its own.
+
 ## Geiger audit (2026-07-29, direct-read mode — repo < 50 files)
 
 | Finding | Class | Evidence | Disposition |

@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import io.github.jtrv.quickword.R
 import io.github.jtrv.quickword.data.WordEntry
 import io.github.jtrv.quickword.ui.theme.Literata
+import java.util.Locale
 
 private const val MAX_CHIPS = 6
 
@@ -102,9 +103,9 @@ private fun SpeakButton(word: String) {
     val context = LocalContext.current
     val tts = remember { mutableStateOf<TextToSpeech?>(null) }
     DisposableEffect(Unit) {
-        onDispose {
-            tts.value?.shutdown()
-        }
+        // Assigned before init completes too, so an engine created by a tap the
+        // user immediately navigates away from is still released.
+        onDispose { tts.value?.shutdown() }
     }
     TextButton(onClick = {
         val engine = tts.value
@@ -115,10 +116,14 @@ private fun SpeakButton(word: String) {
             pending =
                 TextToSpeech(context) { status ->
                     if (status == TextToSpeech.SUCCESS) {
-                        tts.value = pending
+                        // The dictionary is English; the device locale is not
+                        // necessarily. Without this, "read" is pronounced with
+                        // whatever phonology the system language implies.
+                        pending?.language = Locale.ENGLISH
                         pending?.speak(word, TextToSpeech.QUEUE_FLUSH, null, word)
                     }
                 }
+            tts.value = pending
         }
     }) {
         Text(

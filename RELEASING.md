@@ -80,10 +80,14 @@ dictionary does).
 
 ## 4. F-Droid
 
+QuickWord ships on both stores, with Play as the primary channel — F-Droid
+review takes weeks and should run in parallel rather than gate the launch.
+
 F-Droid builds from source on their own infrastructure and signs with their own
 key, so **the F-Droid build and the Play build are not interchangeable** — a
-user cannot update from one to the other without uninstalling. Decide up front
-which is the "official" channel and say so in the README if it matters to you.
+user cannot update from one to the other without uninstalling. That is a
+property of publishing to both, not a problem to solve; it only needs saying out
+loud if a user ever asks why switching stores wants a reinstall.
 
 1. Open a request at [gitlab.com/fdroid/rfp](https://gitlab.com/fdroid/rfp/-/issues)
    with the repo URL and the tag from step 1.
