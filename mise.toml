@@ -30,6 +30,10 @@ run = "./gradlew --console=plain assembleRelease"
 description = "Play upload AAB → app/build/outputs/bundle/release/app-release.aab"
 run = "./gradlew --console=plain bundleRelease"
 
+[tasks."store-assets"]
+description = "Regenerate F-Droid/Play listing images into fastlane/metadata (icon, feature graphic, screenshots)"
+run = "tool/store-assets.sh"
+
 [tasks.install]
 description = "Build + install debug APK on connected device"
 run = "./gradlew --console=plain installDebug"

@@ -69,7 +69,7 @@ CC BY-SA 4.0 + attribution files.
 | M4 ✅ | Thesaurus notification action (in-place swap, no app launch) + expandable synonym chips | 3 notifier contract tests; button verified on emulator (app/shots/device_thesaurus_swap.png) |
 | M5 ✅ | Wikipedia no-hit fallback (notification + in-app page, live-verified with "Nairobi"); history/favourites (recents on empty search, ★ page toggle, ★ Save notification action — tap-verified via uiautomator) | notifier/history/wiki-parse contract tests |
 | M6 ✅* | TTS (word page); affix filter (proper nouns kept per PRODUCT principle 4 — measured: names are only ~14 MB of gloss); DB release `db-en-v1` (267 MB raw / 122 MB gz) + first-run downloader (5 contract tests, verified swap-in); README + fastlane metadata | *deferred: settings screen (no toggle worth a screen yet) |
-| M7 ▶ | Play packaging: release build type (R8 + resource shrinking, no keep rules needed — 2.2 MB APK / 4.0 MB AAB), optional keystore signing via untracked `keystore.properties`, `bundleRelease` in CI. Release APK smoke-tested on emulator: PROCESS_TEXT notification, search, word page (fonts survive resource obfuscation) | remaining: upload keystore + Play Console listing |
+| M7 ✅* | Store readiness. Release build type (R8 + resource shrinking, no keep rules needed — 2.2 MB APK / 4.0 MB AAB), optional keystore signing via untracked `keystore.properties`, `bundleRelease` in CI; release APK smoke-tested on emulator (PROCESS_TEXT notification, search, word page — fonts survive resource obfuscation). About screen carrying CC BY-SA attribution and the verbatim OFL texts as APK assets. `PRIVACY.md` (Play requires a policy URL), `RELEASING.md`, listing images generated from app sources by `tool/store-assets.sh` | licence compliance contract-tested (`AboutScreenTest`: entry point reachable + OFL text present in-APK); `mise run verify` green; OFL/CC assets confirmed present in the R8 release APK. *remaining is account-only: upload keystore, Play listing, F-Droid RFP |
 
 ## Geiger audit (2026-07-29, direct-read mode — repo < 50 files)
 
@@ -129,5 +129,7 @@ soon as the thing exists.
 
 - ~~App id~~ — resolved 2026-07-29: `io.github.jtrv.quickword` (user choice,
   F-Droid-friendly GitHub pattern).
-- Font licensing check at M3: Literata + Inter are OFL, fine to bundle; keep
-  OFL notices in about/licenses screen.
+- ~~Font licensing~~ — resolved at M7: Literata + Inter are OFL; the licence
+  texts ship as APK assets (`app/src/main/assets/licenses/`) and render verbatim
+  on the About screen, alongside the CC BY-SA attribution the dictionary data
+  requires. Both are contract-tested, not documented-and-hoped.

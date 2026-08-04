@@ -12,7 +12,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -34,6 +36,7 @@ fun SearchScreen(
     recents: List<HistoryEntry>,
     onQueryChange: (String) -> Unit,
     onWordSelected: (String) -> Unit,
+    onAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize().padding(horizontal = 16.dp)) {
@@ -43,6 +46,13 @@ fun SearchScreen(
             modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
             placeholder = { Text(stringResource(R.string.search_hint)) },
             leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+            // ponytail: no top bar exists; the field's trailing slot is the one
+            // always-visible affordance, and licences must stay reachable.
+            trailingIcon = {
+                IconButton(onClick = onAbout) {
+                    Icon(Icons.Outlined.Info, contentDescription = stringResource(R.string.about))
+                }
+            },
             singleLine = true,
             shape = CircleShape,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),

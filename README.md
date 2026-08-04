@@ -35,20 +35,14 @@ mise run shots       # render screens to PNGs (Roborazzi)
 mise run etl         # rebuild the dictionary DB from a kaikki dump
 mise run build:release  # R8-minified release APK
 mise run bundle         # Play upload AAB
+mise run store-assets   # regenerate listing images in fastlane/metadata
 ```
 
-### Release signing
-
-Release builds are debug-signed unless a `keystore.properties` exists at the
-repo root (untracked, alongside the `.jks` it names) — so the release build
-works for anyone, and only uploads need the real key:
-
-```properties
-storeFile=quickword-upload.jks
-storePassword=…
-keyAlias=upload
-keyPassword=…
-```
+Release builds are debug-signed unless an untracked `keystore.properties` sits
+at the repo root, so `assembleRelease` works for anyone and only uploads need
+the real key. Publishing steps — signing, Play data-safety answers, F-Droid
+submission — are in [RELEASING.md](RELEASING.md); privacy in
+[PRIVACY.md](PRIVACY.md).
 
 Android SDK: platform 37. See `PLAN.md` for architecture (and its
 adversarial-refutation tables), `DESIGN.md`/`PRODUCT.md` for the design
@@ -56,6 +50,6 @@ system.
 
 ## License
 
-Code: [MIT](LICENSE). Bundled fonts: Literata & Inter (OFL, see
-`app/fonts-licenses/`). Dictionary data: CC BY-SA 4.0 (Wiktionary
-contributors).
+Code: [MIT](LICENSE). Bundled fonts: Literata & Inter (OFL, shipped inside the
+app at `app/src/main/assets/licenses/` and shown on the app's About screen).
+Dictionary data: CC BY-SA 4.0 (Wiktionary contributors).

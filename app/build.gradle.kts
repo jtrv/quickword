@@ -29,6 +29,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true // AboutScreen shows VERSION_NAME
     }
 
     signingConfigs {

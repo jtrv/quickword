@@ -1,0 +1,105 @@
+# Releasing QuickWord
+
+Everything the repo can do for a release is already automated; what is left
+needs accounts and a private key, which is why it is a checklist rather than a
+script.
+
+## 1. Cut the version
+
+`versionCode` must increase on every upload and never be reused; `versionName`
+is what users see. Both live in `app/build.gradle.kts`.
+
+```sh
+# bump versionCode/versionName, add fastlane/metadata/android/en-US/changelogs/<versionCode>.txt
+mise run verify
+git commit -am "release: 1.0.0"
+git tag -a v1.0.0 -m "QuickWord 1.0.0" && git push --follow-tags
+```
+
+The tag matters beyond bookkeeping: F-Droid's update checker watches tags, so a
+release without one is a release F-Droid will never see.
+
+## 2. Upload keystore (once, ever)
+
+```sh
+keytool -genkeypair -v -keystore quickword-upload.jks -alias upload \
+  -keyalg RSA -keysize 2048 -validity 10000
+```
+
+Then write `keystore.properties` next to it (both are gitignored):
+
+```properties
+storeFile=quickword-upload.jks
+storePassword=…
+keyAlias=upload
+keyPassword=…
+```
+
+**Back the `.jks` up somewhere you will still have in five years.** Play Signing
+means Google holds the *app* signing key, so a lost upload key is recoverable
+via support — but F-Droid publishes under its own key with no such escape
+hatch, and losing a key there means the app can never be updated in place.
+
+Verify the build picked the real key up rather than the debug fallback:
+
+```sh
+mise run bundle
+apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
+```
+
+## 3. Google Play
+
+Upload `app/build/outputs/bundle/release/app-release.aab`.
+
+The listing text and images come straight out of `fastlane/metadata/android/en-US/`
+(regenerate images with `mise run store-assets` after any palette or UI change):
+
+| Play field | File |
+|---|---|
+| App name | `title.txt` |
+| Short description | `short_description.txt` |
+| Full description | `full_description.txt` |
+| App icon (512×512) | `images/icon.png` |
+| Feature graphic (1024×500) | `images/featureGraphic.png` |
+| Phone screenshots (≥2) | `images/phoneScreenshots/*.png` |
+| Privacy policy URL | `https://github.com/jtrv/quickword/blob/main/PRIVACY.md` |
+
+**Data safety form.** No accounts, no ads, no analytics, no crash reporting, and
+nothing is persisted off-device — so *Data collected: none* and *Data shared:
+none* is the honest answer. One nuance worth deciding deliberately rather than
+clicking past: when a word has no dictionary entry, that word is sent to the
+Wikimedia API. QuickWord neither stores nor receives it back, which fits
+Google's ephemeral-processing carve-out, but if you would rather over-disclose
+than argue the point later, declare it under *App activity → Other user-generated
+content*, processed ephemerally, not shared. `PRIVACY.md` describes it either way.
+
+Content rating: dictionary/reference, no user interaction, no ads. Note in the
+questionnaire that definitions come from an unfiltered general-purpose
+dictionary (Wiktionary includes profanity and sexual vocabulary, as every
+dictionary does).
+
+## 4. F-Droid
+
+F-Droid builds from source on their own infrastructure and signs with their own
+key, so **the F-Droid build and the Play build are not interchangeable** — a
+user cannot update from one to the other without uninstalling. Decide up front
+which is the "official" channel and say so in the README if it matters to you.
+
+1. Open a request at [gitlab.com/fdroid/rfp](https://gitlab.com/fdroid/rfp/-/issues)
+   with the repo URL and the tag from step 1.
+2. They will write a build recipe in `fdroiddata`. Nothing in this repo blocks
+   it: dependencies are androidx/Compose only, the build needs no proprietary
+   SDK, and `fastlane/metadata/` is already in the layout their bot reads.
+3. Expect a question about `assets/dictionary/quickword-en.db`. It is a small
+   fixture generated from public data by `etl/build_db.py`; the full dictionary
+   is downloaded at runtime from a GitHub release, which is fine for F-Droid
+   (free content, free host) but should be described in the RFP rather than
+   discovered by a reviewer.
+
+## What CI already guarantees
+
+`tool/verify.sh` plus the `bundleRelease` step in `.github/workflows/verify.yml`
+mean an unbuildable release, an R8 regression, a palette that drifted from
+`DESIGN.md`, or a dictionary schema that drifted from the ETL cannot reach a
+tag. The gate is the same script locally and in CI, so "works on my machine"
+is not a category of failure here.

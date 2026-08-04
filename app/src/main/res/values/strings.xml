@@ -25,4 +25,15 @@
     <string name="action_share">Share</string>
     <string name="notifications_muted">Lookups won’t appear: notifications are muted</string>
     <string name="notifications_muted_fix">Fix</string>
+    <string name="about">About &amp; licences</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_dictionary_heading">Dictionary</string>
+    <string name="about_dictionary">Definitions and synonyms come from the English Wiktionary, extracted by kaikki.org. Wiktionary text is © its contributors and licensed CC BY-SA 4.0; this app redistributes it under the same licence.</string>
+    <string name="about_wikipedia_heading">Wikipedia</string>
+    <string name="about_wikipedia">Words with no dictionary entry fall back to Wikipedia summaries via the Wikimedia REST API — © Wikipedia contributors, CC BY-SA 4.0.</string>
+    <string name="about_fonts_heading">Fonts</string>
+    <string name="about_fonts">Literata and Inter, both under the SIL Open Font License 1.1. The full licence texts are reproduced below.</string>
+    <string name="about_code_heading">App</string>
+    <string name="about_code">QuickWord is free software under the MIT licence. No ads, no analytics, no accounts — nothing you look up leaves your device.</string>
+    <string name="about_source">Source code</string>
 </resources>

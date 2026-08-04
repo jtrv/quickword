@@ -30,13 +30,15 @@ import io.github.jtrv.quickword.data.HistoryEntry
 import io.github.jtrv.quickword.data.HistoryStore
 import io.github.jtrv.quickword.data.Suggestion
 import io.github.jtrv.quickword.data.WikipediaApi
+import io.github.jtrv.quickword.ui.about.AboutScreen
 import io.github.jtrv.quickword.ui.search.SearchScreen
 import io.github.jtrv.quickword.ui.word.WikiScreen
 import io.github.jtrv.quickword.ui.word.WordScreen
 import kotlinx.coroutines.launch
 
-// ponytail: two screens, hoisted state, no navigation library. Revisit if a
-// third destination appears (M5 history/settings).
+// ponytail: three screens, hoisted state, no navigation library — each is a
+// leaf reached from search and dismissed with Back. Revisit if any destination
+// ever needs to stack on another.
 @Composable
 fun QuickWordApp(
     repository: DictionaryRepository,
@@ -48,6 +50,7 @@ fun QuickWordApp(
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     var openWord by rememberSaveable { mutableStateOf(initialWord) }
+    var showAbout by rememberSaveable { mutableStateOf(false) }
     var historyVersion by rememberSaveable { mutableStateOf(0) }
     var dictVersion by rememberSaveable { mutableStateOf(0) }
     val scope = rememberCoroutineScope()
@@ -91,6 +94,10 @@ fun QuickWordApp(
             val result = if (openWord == null) null else lookup
             val wikiSummary = (result as? LookupResult.Wiki)?.summary
             when {
+                showAbout -> {
+                    BackHandler { showAbout = false }
+                    AboutScreen()
+                }
                 result is LookupResult.Entries -> {
                     BackHandler { openWord = null }
                     WordScreen(
@@ -117,6 +124,7 @@ fun QuickWordApp(
                         recents = recents,
                         onQueryChange = { query = it },
                         onWordSelected = { openWord = it },
+                        onAbout = { showAbout = true },
                     )
             }
         }

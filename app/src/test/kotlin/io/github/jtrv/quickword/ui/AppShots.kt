@@ -3,8 +3,10 @@ package io.github.jtrv.quickword.ui
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
@@ -68,6 +70,19 @@ class AppShots {
         }
         compose.onNodeWithText("verb").assertExists()
         compose.onRoot().captureRoboImage("shots/$name.png")
+    }
+
+    @Test
+    fun about() {
+        compose.setContent {
+            QuickWordTheme(darkTheme = false) { QuickWordApp(repository = repo(), history = history()) }
+        }
+        compose.onNodeWithContentDescription("About & licences").performClick()
+        // Proof of state: verbatim OFL text exists only on the about screen.
+        compose.waitUntil(timeoutMs) {
+            compose.onAllNodesWithText("SIL OPEN FONT LICENSE", substring = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onRoot().captureRoboImage("shots/about.png")
     }
 
     @Test fun searchLight() = searchShot(dark = false, name = "search_light")
