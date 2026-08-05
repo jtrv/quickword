@@ -90,7 +90,9 @@ property of publishing to both, not a problem to solve; it only needs saying out
 loud if a user ever asks why switching stores wants a reinstall.
 
 1. Open a request at [gitlab.com/fdroid/rfp](https://gitlab.com/fdroid/rfp/-/issues)
-   with the repo URL and the tag from step 1.
+   with the repo URL and the tag from step 1. Ask for `Donate: https://ko-fi.com/jtrvs`
+   in the metadata — F-Droid renders a donate button from that field, and it is
+   easier to include up front than to add later.
 2. They will write a build recipe in `fdroiddata`. Nothing in this repo blocks
    it: dependencies are androidx/Compose only, the build needs no proprietary
    SDK, and `fastlane/metadata/` is already in the layout their bot reads.

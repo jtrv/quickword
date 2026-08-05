@@ -48,6 +48,11 @@ Android SDK: platform 37. See `PLAN.md` for architecture (and its
 adversarial-refutation tables), `DESIGN.md`/`PRODUCT.md` for the design
 system.
 
+## Support
+
+QuickWord is free and always will be. If it saved you a trip to a browser,
+[buy me a coffee](https://ko-fi.com/jtrvs).
+
 ## License
 
 Code: [MIT](LICENSE). Bundled fonts: Literata & Inter (OFL, shipped inside the

@@ -45,6 +45,7 @@ fun AboutScreen(
     val context = LocalContext.current
     val assets = context.assets
     val licenceUrl = stringResource(R.string.licence_url)
+    val supportUrl = stringResource(R.string.support_url)
     // ponytail: ~3 KB read on a screen the user deliberately opened.
     val licences =
         remember {
@@ -80,6 +81,10 @@ fun AboutScreen(
         Section(R.string.about_code_heading, R.string.about_code)
         TextButton(onClick = { uriHandler.openUri(SOURCE_URL) }) {
             Text(stringResource(R.string.about_source))
+        }
+        // Opens a browser: a donation link, not an in-app purchase flow.
+        TextButton(onClick = { uriHandler.openUri(supportUrl) }) {
+            Text(stringResource(R.string.about_support))
         }
         Storage(
             dictionaryBytes = dictionaryBytes,
