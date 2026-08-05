@@ -73,20 +73,18 @@ CC BY-SA 4.0 + attribution files.
 
 | M8 ✅ | Pre-launch functionality audit: no-hit dead end fixed (app was quieter than its own notification), TTS pinned to `Locale.ENGLISH`, TTS engine released when init outlives the screen, storage & data controls (remove the ~120 MB download, clear recents/favourites behind a confirm) | `QuickWordAppTest` mutation-tested — reinstating the fall-through to search reddens it; `mise run verify` green |
 
+| M9 ✅ | Dictionary acquisition handed to `DownloadManager`: resumes a dropped connection instead of restarting ~120 MB, refuses metered networks unless the user says otherwise (confirm dialog / "Use mobile data"), survives leaving the app, and shows a system progress notification. Gunzip + verify + atomic swap stay ours and stay tested | 6 contract tests on the install path; verified end to end on emulator 2026-08-05: download → 122 MB archive → 280 MB DB swapped in live, banner cleared, archive reclaimed; Remove download returns to starter |
+
 ## Known gaps at launch (deliberate, not forgotten)
 
-- **Download is all-or-nothing**: `DictionaryDownloader` streams with no resume
-  and no network-type constraint, so a dropped connection at 90% restarts ~120 MB
-  and nothing stops it running on cellular. `DownloadManager` gives resume,
-  metered-network policy and a system progress notification for free — the
-  right fix if this ever generates a complaint, and a rewrite of a working
-  component if it does not.
 - **Launcher icon is still the M0 placeholder** (`ic_launcher_foreground.xml`
   says so in its own comment). It reads fine at every size and the store assets
   derive from it, so this is a branding decision, not a blocker.
 - **English only.** The dictionary, the TTS locale and the Wikipedia endpoint
-  are all `en`. Multi-language means a per-language DB release and a picker —
-  a milestone, not a patch.
+  are all `en`. Multi-language means a per-language DB release, a language-aware
+  TTS locale and Wikipedia host, and a picker. The picker does *not* imply a
+  settings screen: the dictionary is the language, so it belongs in About's
+  Storage & data section, where downloading and removing already live.
 - **No definition full-text search** — refuted at plan time (AOSP SQLite has no
   FTS5); would need `androidx.sqlite:sqlite-bundled`.
 - **No settings screen.** Theme follows the system, notifications are managed by

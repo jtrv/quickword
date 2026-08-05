@@ -22,6 +22,15 @@
     <string name="dict_downloading">Downloading… %1$d%%</string>
     <string name="dict_downloading_indeterminate">Downloading…</string>
     <string name="dict_failed">Download failed — try again</string>
+    <string name="dict_retry">Try again</string>
+    <string name="dict_installing">Finishing…</string>
+    <string name="dict_notification_title">QuickWord dictionary</string>
+    <string name="dict_waiting_wifi">Waiting for Wi-Fi to download the dictionary</string>
+    <string name="dict_use_mobile">Use mobile data</string>
+    <string name="dict_metered_title">Download over mobile data?</string>
+    <string name="dict_metered_body">The full dictionary is about 120 MB. It downloads in the background and picks up where it left off if the connection drops.</string>
+    <string name="dict_metered_confirm">Download now</string>
+    <string name="dict_metered_wifi">Wait for Wi-Fi</string>
     <string name="listen">Listen</string>
     <string name="action_share">Share</string>
     <string name="notifications_muted">Lookups won’t appear: notifications are muted</string>
@@ -38,7 +47,7 @@
     <string name="about_code">QuickWord is free software under the MIT licence. No ads, no analytics, no accounts — nothing you look up leaves your device.</string>
     <string name="about_source">Source code</string>
     <string name="about_storage_heading">Storage &amp; data</string>
-    <string name="about_dictionary_full">Full dictionary downloaded — %1$s</string>
+    <string name="about_dictionary_full">Full dictionary — %1$s on this device</string>
     <string name="about_dictionary_starter">Starter dictionary only (bundled with the app)</string>
     <string name="about_remove_dictionary">Remove download</string>
     <string name="about_clear_history">Clear recents &amp; favourites</string>

@@ -88,7 +88,7 @@ fun QuickWordApp(
             if (notificationsMuted) {
                 MutedBanner(onFixNotifications)
             }
-            if (downloader != null && !downloader.hasFullDictionary()) {
+            if (downloader != null && !downloader.hasFullDictionary) {
                 DownloadBanner(downloader) {
                     repository.reopen()
                     dictVersion++
@@ -101,7 +101,7 @@ fun QuickWordApp(
                     AboutScreen(
                         // Keyed on dictVersion so removing or downloading the
                         // full dictionary re-reads the size instead of lying.
-                        dictionaryBytes = remember(dictVersion) { downloader?.fullDictionaryBytes() ?: 0L },
+                        dictionaryBytes = remember(dictVersion) { downloader?.fullDictionaryBytes ?: 0L },
                         onRemoveDictionary = {
                             downloader?.removeFullDictionary()
                             repository.reopen()
@@ -199,52 +199,6 @@ private fun NoEntry(word: String) {
         )
     }
 }
-
-@Composable
-private fun DownloadBanner(
-    downloader: DictionaryDownloader,
-    onDownloaded: () -> Unit,
-) {
-    val scope = rememberCoroutineScope()
-    var progress by remember { mutableStateOf<Float?>(null) }
-    var failed by remember { mutableStateOf(false) }
-    Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            val running = progress
-            Text(
-                text =
-                    when {
-                        running != null && running >= 0f ->
-                            stringResource(R.string.dict_downloading, (running * PERCENT).toInt())
-                        running != null -> stringResource(R.string.dict_downloading_indeterminate)
-                        failed -> stringResource(R.string.dict_failed)
-                        else -> stringResource(R.string.dict_banner)
-                    },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f),
-            )
-            if (progress == null) {
-                TextButton(onClick = {
-                    failed = false
-                    progress = -1f
-                    scope.launch {
-                        val result = downloader.download { progress = it }
-                        progress = null
-                        if (result.isSuccess) onDownloaded() else failed = true
-                    }
-                }) {
-                    Text(stringResource(R.string.dict_download))
-                }
-            }
-        }
-    }
-}
-
-private const val PERCENT = 100
 
 @Composable
 private fun MutedBanner(onFix: () -> Unit) {
