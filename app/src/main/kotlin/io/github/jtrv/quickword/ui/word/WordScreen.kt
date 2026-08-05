@@ -41,6 +41,9 @@ import java.util.Locale
 
 private const val MAX_CHIPS = 6
 
+private val UNUSABLE_LANGUAGE =
+    setOf(TextToSpeech.LANG_MISSING_DATA, TextToSpeech.LANG_NOT_SUPPORTED, null)
+
 @Composable
 fun WordScreen(
     entries: List<WordEntry>,
@@ -115,14 +118,25 @@ private fun SpeakButton(word: String) {
             var pending: TextToSpeech? = null
             pending =
                 TextToSpeech(context) { status ->
-                    if (status == TextToSpeech.SUCCESS) {
-                        // The dictionary is English; the device locale is not
-                        // necessarily. Without this, "read" is pronounced with
-                        // whatever phonology the system language implies.
-                        pending?.language = Locale.ENGLISH
-                        pending?.speak(word, TextToSpeech.QUEUE_FLUSH, null, word)
+                    val engine = pending
+                    // The dictionary is English; the device locale is not
+                    // necessarily. Without this, "read" is pronounced with
+                    // whatever phonology the system language implies — and an
+                    // engine with no English voice would mispronounce silently.
+                    val usable =
+                        status == TextToSpeech.SUCCESS &&
+                            engine?.setLanguage(Locale.ENGLISH) !in UNUSABLE_LANGUAGE
+                    if (usable) {
+                        engine?.speak(word, TextToSpeech.QUEUE_FLUSH, null, word)
+                    } else {
+                        // Never keep an engine that cannot speak: the next tap
+                        // would call speak() on it forever.
+                        engine?.shutdown()
+                        tts.value = null
                     }
                 }
+            // Held even before init resolves, so navigating away mid-init still
+            // shuts it down.
             tts.value = pending
         }
     }) {

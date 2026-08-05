@@ -75,6 +75,8 @@ CC BY-SA 4.0 + attribution files.
 
 | M9 ✅ | Dictionary acquisition handed to `DownloadManager`: resumes a dropped connection instead of restarting ~120 MB, refuses metered networks unless the user says otherwise (confirm dialog / "Use mobile data"), survives leaving the app, and shows a system progress notification. Gunzip + verify + atomic swap stay ours and stay tested | 6 contract tests on the install path; verified end to end on emulator 2026-08-05: download → 122 MB archive → 280 MB DB swapped in live, banner cleared, archive reclaimed; Remove download returns to starter |
 
+| M10 ✅ | Cross-model review (Codex, 12 findings) actioned: false "nothing leaves your device" claim corrected, PROCESS_TEXT input bounded, as-typed candidate added so non-ASCII headwords (`Übermensch`) stop falling through to Wikipedia, bundled-DB extraction made atomic, SQLite handles closed in the trampoline and receivers, download verification counts real rows instead of trusting `meta`, stale-download reconciliation, `PAUSED_QUEUED_FOR_WIFI` handled, TTS engine dropped when unusable, word page re-resolves after a dictionary install. Search field moved to the bottom of the screen | `mise run verify` green; bottom-bar layout verified on device with a docked keyboard |
+
 ## Known gaps at launch (deliberate, not forgotten)
 
 - **Launcher icon is still the M0 placeholder** (`ic_launcher_foreground.xml`

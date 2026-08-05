@@ -19,11 +19,13 @@ import kotlinx.coroutines.launch
 class ProcessTextActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Exported component: only the two actions the manifest advertises get
+        // read, rather than treating anything at all as a share.
         val raw =
-            if (intent.action == Intent.ACTION_PROCESS_TEXT) {
-                intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)
-            } else {
-                intent.getCharSequenceExtra(Intent.EXTRA_TEXT)
+            when (intent.action) {
+                Intent.ACTION_PROCESS_TEXT -> intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)
+                Intent.ACTION_SEND -> intent.getCharSequenceExtra(Intent.EXTRA_TEXT)
+                else -> null
             }?.toString().orEmpty()
 
         val candidates = lookupCandidates(raw)
@@ -45,23 +47,30 @@ class ProcessTextActivity : ComponentActivity() {
 
         val repository = DictionaryRepository(applicationContext)
         lifecycleScope.launch {
-            val entries = repository.lookup(candidates)
-            when {
-                entries.isNotEmpty() -> {
-                    HistoryStore(applicationContext).recordLookup(entries.first().word)
-                    notifier.showEntries(entries)
-                }
-                else -> {
-                    // No dictionary hit: proper nouns and names live on Wikipedia.
-                    val wiki = WikipediaApi().summary(candidates.first())
-                    if (wiki != null) {
-                        notifier.showWiki(wiki)
-                    } else {
-                        notifier.showNoEntry(candidates.first())
-                    }
-                }
+            try {
+                lookUp(repository, notifier, candidates)
+            } finally {
+                // This is the hot path — one launch per lookup, forever. Leaving
+                // SQLite handles to the finaliser accumulates file descriptors.
+                repository.close()
+                finish()
             }
-            finish()
         }
+    }
+
+    private suspend fun lookUp(
+        repository: DictionaryRepository,
+        notifier: LookupNotifier,
+        candidates: List<String>,
+    ) {
+        val entries = repository.lookup(candidates)
+        if (entries.isNotEmpty()) {
+            HistoryStore(applicationContext).use { it.recordLookup(entries.first().word) }
+            notifier.showEntries(entries)
+            return
+        }
+        // No dictionary hit: proper nouns and names live on Wikipedia.
+        val wiki = WikipediaApi().summary(candidates.first())
+        if (wiki != null) notifier.showWiki(wiki) else notifier.showNoEntry(candidates.first())
     }
 }

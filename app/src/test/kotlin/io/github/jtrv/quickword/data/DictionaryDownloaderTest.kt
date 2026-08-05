@@ -94,6 +94,21 @@ class DictionaryDownloaderTest {
     }
 
     @Test
+    fun `a download installed just before the process died is reconciled`() {
+        val downloader = DictionaryDownloader(context)
+        val manager = context.getSystemService(DownloadManager::class.java)
+        downloader.enqueue(allowMetered = true)
+        // install() renames the database before it clears the download record.
+        // This is the process dying in that window.
+        File(context.noBackupFilesDir, DictionaryDownloader.FULL_DB_NAME).writeBytes(byteArrayOf(1))
+
+        assertEquals(DictionaryDownloader.State.Installed, downloader.state())
+
+        // Otherwise the ~120 MB archive sits there with nothing left to delete it.
+        manager.query(DownloadManager.Query()).use { assertEquals(0, it.count) }
+    }
+
+    @Test
     fun `enqueue queues exactly one download and replaces its predecessor`() {
         val downloader = DictionaryDownloader(context)
         val manager = context.getSystemService(DownloadManager::class.java)

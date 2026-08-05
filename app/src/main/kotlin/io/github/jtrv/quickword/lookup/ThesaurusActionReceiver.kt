@@ -21,10 +21,12 @@ class ThesaurusActionReceiver : BroadcastReceiver() {
         val word = intent.getStringExtra(EXTRA_WORD) ?: return
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
+            val repository = DictionaryRepository(context.applicationContext)
             try {
-                val entries = DictionaryRepository(context.applicationContext).entriesFor(word)
-                LookupNotifier(context.applicationContext).showSynonyms(word, entries)
+                LookupNotifier(context.applicationContext)
+                    .showSynonyms(word, repository.entriesFor(word))
             } finally {
+                repository.close()
                 pending.finish()
             }
         }

@@ -74,7 +74,10 @@ class DictionaryDownloader(
 
     fun state(): State =
         when {
-            hasFullDictionary -> State.Installed
+            // Reconcile first: install() renames before it clears the record, so
+            // dying in that window would otherwise strand the ~120 MB archive on
+            // disk with nothing left to ever delete it.
+            hasFullDictionary -> State.Installed.also { if (prefs.getLong(KEY_ID, NO_ID) != NO_ID) cancel() }
             else -> prefs.getLong(KEY_ID, NO_ID).let { id -> if (id == NO_ID) State.Absent else queryState(id) }
         }
 
@@ -177,14 +180,22 @@ private fun downloadingState(
     return DictionaryDownloader.State.Downloading(
         fraction = if (total > 0) soFar.toFloat() / total else DictionaryDownloader.UNKNOWN_PROGRESS,
         // Distinct from "slow": the user asked for Wi-Fi only and there is none,
-        // so nothing happens until one of those two facts changes.
-        waitingForNetwork =
-            status == DownloadManager.STATUS_PAUSED &&
-                reason == DownloadManager.PAUSED_WAITING_FOR_NETWORK,
+        // so nothing happens until one of those two facts changes. Two reasons
+        // mean that — QUEUED_FOR_WIFI is the one a ~120 MB transfer actually
+        // hits, since it exceeds the system's mobile-download limit.
+        waitingForNetwork = status == DownloadManager.STATUS_PAUSED && reason in WIFI_WAIT_REASONS,
     )
 }
 
-/** A file is the dictionary only if it opens as SQLite and holds enough words. */
+private val WIFI_WAIT_REASONS =
+    setOf(DownloadManager.PAUSED_WAITING_FOR_NETWORK, DownloadManager.PAUSED_QUEUED_FOR_WIFI)
+
+/**
+ * A file is the dictionary only if it opens as SQLite and really contains the
+ * words. Counted from the table rather than read out of `meta`, because `meta`
+ * is a claim the file makes about itself: a truncated or wrong asset can carry
+ * an intact metadata row and no usable rows behind it.
+ */
 private fun verify(
     db: File,
     minWords: Long,
@@ -192,8 +203,14 @@ private fun verify(
     SQLiteDatabase.openDatabase(db.path, null, SQLiteDatabase.OPEN_READONLY).use {
         val words =
             it
-                .rawQuery("SELECT value FROM meta WHERE key='words'", null)
-                .use { c -> if (c.moveToFirst()) c.getString(0).toLong() else 0L }
+                .rawQuery("SELECT COUNT(*) FROM words", null)
+                .use { c -> if (c.moveToFirst()) c.getLong(0) else 0L }
         check(words >= minWords) { "downloaded DB has only $words words" }
+        // Senses are what the app actually renders; a words-only file is useless.
+        val senses =
+            it
+                .rawQuery("SELECT COUNT(*) FROM senses", null)
+                .use { c -> if (c.moveToFirst()) c.getLong(0) else 0L }
+        check(senses >= minWords) { "downloaded DB has only $senses senses" }
     }
 }

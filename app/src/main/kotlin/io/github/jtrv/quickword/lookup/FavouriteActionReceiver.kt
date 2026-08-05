@@ -18,7 +18,7 @@ class FavouriteActionReceiver : BroadcastReceiver() {
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                HistoryStore(context.applicationContext).setFavourite(word, true)
+                HistoryStore(context.applicationContext).use { it.setFavourite(word, true) }
             } finally {
                 pending.finish()
             }

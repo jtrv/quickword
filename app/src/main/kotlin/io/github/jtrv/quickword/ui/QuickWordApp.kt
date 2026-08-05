@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -65,7 +66,9 @@ fun QuickWordApp(
     }
     // Dictionary first; Wikipedia only after a confirmed no-hit (proper nouns).
     // null means still resolving — the Wikipedia leg is a network round trip.
-    val lookup by produceState<LookupResult?>(null, openWord) {
+    // Keyed on dictVersion too: a word shown as missing before the full
+    // dictionary installed must re-resolve against it, not stay wrong.
+    val lookup by produceState<LookupResult?>(null, openWord, dictVersion) {
         value = null
         val word = openWord ?: return@produceState
         val entries = repository.entriesFor(word)
@@ -81,8 +84,15 @@ fun QuickWordApp(
         value = openWord?.let { history.isFavourite(it) } ?: false
     }
 
+    // Insets, hard-won on a device (2026-08-05): the window resizes for the
+    // keyboard, so the IME must NOT be padded for as well — doing so strands the
+    // bottom search field a keyboard's height above the keyboard. But that same
+    // resize drops the status-bar inset Scaffold would otherwise report, letting
+    // the results list run under the clock — statusBars reports 0 while the
+    // keyboard is up. So Scaffold contributes nothing and the top inset comes
+    // from statusBarsIgnoringVisibility, which does not collapse.
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-        Column(Modifier.padding(innerPadding)) {
+        Column(Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)) {
             // Channel-health requirement (PLAN.md refutation round 2): users can
             // silently mute the channel and the app cannot restore it — surface it.
             if (notificationsMuted) {

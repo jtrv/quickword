@@ -56,15 +56,30 @@ class DictionaryRepository(
         }
     }
 
+    /** Release the handle. The trampoline opens one per lookup. */
+    fun close() = reopen()
+
     // The asset is the source of truth; re-extract when its size changes
     // (cheap proxy for a new dictionary version — real versioning at M6).
+    //
+    // Written to a private temp file and renamed, because two trampoline
+    // launches can race here on first run: a half-copied file under the final
+    // name is a corrupt database that fails the lookup it was extracted for.
+    // Each racer writes its own temp file, so whichever rename lands last still
+    // leaves a whole database — no lock required, and none would help, since
+    // the racers are separate instances.
     private fun ensureExtracted(): File {
         val target = File(context.noBackupFilesDir, DB_FILE_NAME)
         val assetSize = context.assets.openFd(ASSET_PATH).use { it.length }
-        if (!target.exists() || target.length() != assetSize) {
+        if (target.exists() && target.length() == assetSize) return target
+        val tmp = File.createTempFile(DB_FILE_NAME, ".tmp", context.noBackupFilesDir)
+        try {
             context.assets.open(ASSET_PATH).use { input ->
-                target.outputStream().use { input.copyTo(it) }
+                tmp.outputStream().use { input.copyTo(it) }
             }
+            check(tmp.renameTo(target)) { "could not install the bundled dictionary" }
+        } finally {
+            tmp.delete() // no-op once renamed
         }
         return target
     }
