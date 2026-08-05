@@ -46,13 +46,17 @@ class LookupNotifier(
         post(query, query, context.getString(R.string.no_results, query))
     }
 
-    /** Wikipedia fallback (no dictionary hit): extract + attribution. */
+    /**
+     * Wikipedia fallback (no dictionary hit). The attribution travels with the
+     * extract: this notification redistributes CC BY-SA text, and it is often
+     * the only place the user ever sees it — the app may never be opened.
+     */
     fun showWiki(summary: io.github.jtrv.quickword.data.WikiSummary) {
         channel.ensure()
         post(
             summary.title,
             context.getString(R.string.wiki_title, summary.title),
-            summary.extract,
+            summary.extract + "\n\n" + context.getString(R.string.wiki_attribution),
         )
     }
 

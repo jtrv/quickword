@@ -44,6 +44,7 @@ fun AboutScreen(
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
     val assets = context.assets
+    val licenceUrl = stringResource(R.string.licence_url)
     // ponytail: ~3 KB read on a screen the user deliberately opened.
     val licences =
         remember {
@@ -71,6 +72,10 @@ fun AboutScreen(
         )
         Section(R.string.about_dictionary_heading, R.string.about_dictionary)
         Section(R.string.about_wikipedia_heading, R.string.about_wikipedia)
+        // The licence obligation is a link to the licence, not its name.
+        TextButton(onClick = { uriHandler.openUri(licenceUrl) }) {
+            Text(stringResource(R.string.about_licence_link))
+        }
         Section(R.string.about_fonts_heading, R.string.about_fonts)
         Section(R.string.about_code_heading, R.string.about_code)
         TextButton(onClick = { uriHandler.openUri(SOURCE_URL) }) {

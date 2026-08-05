@@ -104,7 +104,38 @@ CC BY-SA 4.0 + attribution files.
 | `data` package fan-in from all packages | intentional | it is the data layer; fan-in is its job | — |
 | Tests ↔ sample.jsonl word coupling | intentional | fixture exists for exactly this | — |
 
-## Refutation table (plan-refute protocol, codex-cli 0.144.6 cross-model)
+## Refutation table
+
+### Round 3 — offline Wikipedia corpus (2026-08-05) — **plan REFUTED as specified**
+
+Proposal under test: ~330 MB SQLite of first paragraphs for the ~875k
+most-viewed English articles, built by our own ETL, shipped as a second
+optional download.
+
+| Claim | Verdict | Disposition |
+|---|---|---|
+| ~875k article intros ≈ **330 MB** | **REFUTED** (own measurement, 396 top-viewed + 239 random articles sampled live) | The 330 MB came from Kiwix's mini ZIM, which stays **compressed at rest**; a queryable SQLite does not. Measured: top-article intros average **1,615 B** (random articles 512 B — the head is 3× fatter than the tail). 875k rows = **~2.0 GB on disk**, ~600 MB download. Off by 6× on the number that matters. |
+| 875k articles cover essentially every proper noun | **REFUTED** — en.wikipedia has **2,164,237 biographies alone**; 875k omits ≥59.6% of people before spending a single row on places or organisations | Coverage target must be derived from a measured hit-rate, not asserted. "Top N" was picked to hit a size budget, then justified backwards. |
+| CC BY-SA is satisfied by attribution + a link to the article | **REFUTED** — §3(a)(1)(C) requires a URI to **the licence itself**; `rg 'creativecommons.org/licenses/by-sa' app/src/main` finds nothing, and `LookupNotifier` shows the extract with neither attribution nor source link | **Live bug in the shipping app, not just the plan.** Fixed 2026-08-05: licence URI on the About screen, attribution line in the notification. |
+| A ~330 MB post-install download needs no special declaration | **REFUTED** — Play's Deceptive Behavior policy requires prompting and disclosing the size first | We already disclose "≈120 MB" in the banner and listing, so the practice was right and the claim was sloppy. Any new corpus must disclose its own size the same way. |
+| Lead paragraphs are obtainable in plain text without a wikitext parser, rankable by popularity | UNREFUTED | Wikimedia Enterprise *Structured Contents* snapshots carry plain-text abstracts; the published pageviews dataset ranks them. Better source than the raw XML dump assumed at planning time. |
+| The ETL can build it within a workstation's and CI's limits | UNREFUTED | The existing pipeline already streams a multi-GB compressed input to SQLite in constant memory, inside the 14 GB / 6 h runner budget. |
+| Custom SQLite beats embedding libzim for a title/paragraph/URL app | UNREFUTED, but **weakly** — the refuter found no metric either way | Downgraded to an open question. The size measurements now argue *for* ZIM's compressed-at-rest design; the revision below adopts that property without the JNI dependency. |
+
+**Revision (measured, not assumed).** Per-row DEFLATE with a shared preset
+dictionary keeps rows queryable while recovering nearly all of the archive's
+density: **620 B/article vs 605 B for whole-file gzip** — a 2.5% penalty for
+staying a database. `java.util.zip.Deflater.setDictionary` is platform API, so
+this stays pure Kotlin. On-device cost becomes 0.68 GB for 875k articles,
+1.55 GB for 2M, 4.65 GB for 6M.
+
+That is the honest curve, and it is what makes the feature a real product
+decision rather than a packaging detail: meaningful proper-noun coverage costs
+1.5 GB+ on someone's phone, on top of the 280 MB dictionary. Deferred until
+there is a measured fallback hit-rate to size it against. The cheap win — a
+cache of summaries already fetched — is unaffected by any of this.
+
+### Round 1 & 2 (plan-refute protocol, codex-cli 0.144.6 cross-model)
 
 ### Round 1 — Kotlin vs Flutter (2026-07-29)
 

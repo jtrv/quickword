@@ -15,7 +15,10 @@
     <string name="synonyms_title">%1$s · synonyms</string>
     <string name="no_synonyms">No synonyms recorded for “%1$s”</string>
     <string name="wiki_title">%1$s · Wikipedia</string>
-    <string name="wiki_attribution">From Wikipedia (CC BY-SA)</string>
+    <!-- CC BY-SA 4.0 §3(a)(1)(C) requires a URI to the licence itself, not just its name. -->
+    <string name="wiki_attribution">From Wikipedia — CC BY-SA 4.0 (creativecommons.org/licenses/by-sa/4.0)</string>
+    <string name="licence_url">https://creativecommons.org/licenses/by-sa/4.0/</string>
+    <string name="about_licence_link">CC BY-SA 4.0 licence</string>
     <string name="wiki_read_more">Read more</string>
     <string name="dict_banner">Starter dictionary — get the full one (≈120 MB)</string>
     <string name="dict_download">Download</string>
