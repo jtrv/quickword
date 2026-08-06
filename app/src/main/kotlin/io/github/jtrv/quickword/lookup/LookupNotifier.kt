@@ -53,10 +53,17 @@ class LookupNotifier(
      */
     fun showWiki(summary: io.github.jtrv.quickword.data.WikiSummary) {
         channel.ensure()
+        // §3(a)(1)(A)(v) wants a URI to the material as well as to the licence,
+        // and the parser already has it — dropping it here was the omission.
+        val credit =
+            listOfNotNull(
+                context.getString(R.string.wiki_attribution),
+                summary.pageUrl.takeIf { it.isNotEmpty() },
+            ).joinToString("\n")
         post(
             summary.title,
             context.getString(R.string.wiki_title, summary.title),
-            summary.extract + "\n\n" + context.getString(R.string.wiki_attribution),
+            summary.extract + "\n\n" + credit,
         )
     }
 

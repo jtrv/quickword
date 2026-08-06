@@ -135,6 +135,33 @@ decision rather than a packaging detail: meaningful proper-noun coverage costs
 there is a measured fallback hit-rate to size it against. The cheap win — a
 cache of summaries already fetched — is unaffected by any of this.
 
+### Round 4 — offline Wikipedia, "their curation, our format" (2026-08-06)
+
+Proposal under test: build two opt-in corpora at build time from Kiwix mini
+ZIMs — `top` (49,981 articles, 25 MB download / 48 MB on disk) and `top1m`
+(991,894 articles, 290 MB / 412 MB) — as SQLite with per-row DEFLATE against a
+shared preset dictionary plus an alias table from Kiwix's redirects, delivered
+through the existing DownloadManager path. **Measured, not estimated:** three
+ZIMs converted, 6.4–6.9× smaller than the source archive each time.
+
+| Claim | Verdict | Disposition |
+|---|---|---|
+| Kiwix regenerates these ZIMs on a dependable cadence | **REFUTED** — `wikipedia_en_top1m_mini` has exactly **one** release ever (2026-04, the file we measured); `top_mini` has 2026-03 and 2026-06; Kiwix has publicly documented an English Wikipedia generation failure with a slipped ETA | The `top1m` tier rests on a file generated once. Mitigated but not removed by snapshotting: we already publish our own release asset, so Kiwix is a build-time input we pin, not a runtime dependency. Refreshing the corpus, however, is at their mercy. **`top` is the safer tier on this axis too.** |
+| `DictionaryDownloader` can carry a second corpus without restructuring | **REFUTED** — single-corpus throughout: one prefs file/key (`dictionary_download`/`id`), `enqueue()` calls `cancel()` so a second download *removes the first*, one destination name, one installed-file check | Must be parameterised by corpus (id, URL, filenames, prefs key) before a second download exists. Not the "free reuse" the plan assumed. |
+| ZIM first-`<p>` extraction equals what the app shows today | **REFUTED** — `WikipediaApi.parse()` deliberately rejects `type:"disambiguation"` (pinned by `WikipediaApiTest`); taking the first `<p>` would happily serve "Mercury" as though it were an article | The ETL must replicate the disambiguation filter. My own fidelity check (40/40 match vs the live API) missed this because it sampled articles, not the class that fails. |
+| Redistribution is satisfied by attribution + licence URI | **REFUTED** — §3(a)(1)(A)(v) also requires retaining a URI to *the material*; the notification discards `summary.pageUrl`, which the parser already captures | Fixed 2026-08-06: the notification carries the article URL. Third distinct CC BY-SA clause this project has tripped — the licence is not one requirement. |
+| ~700 MB of optional downloads needs no special handling | **REFUTED** (wording) — Play requires prompt *and* size disclosure, and `getMaxBytesOverMobile` makes metered handling mandatory at this size | We already do all three. The claim was sloppy, the implementation was not. |
+| Raw DEFLATE with a preset dictionary decodes on Android, fast enough for the hot path | UNREFUTED — 3.8 µs/decode measured locally, 1.5 µs by the refuter | **Landmine found while testing:** with raw deflate `needsDictionary()` never fires, so `setDictionary()` must be called *before* `inflate()`. The documented-looking order fails with `DataFormatException: invalid distance too far back`. Also: the preset dictionary must be stored **inside** the corpus, or the file cannot decode itself. |
+| ~992k articles is sufficient coverage for the fallback's job | UNREFUTED, **weakly** — refuter found nothing measuring real dictionary-miss selections either way | Stays an open question, not a validated assumption. The honest test is the fallback hit-rate, which we do not collect and (no analytics) will not. |
+
+**Verdict:** the *format* is validated — three independent conversions, a
+6.4–6.9× win over shipping ZIMs, fidelity confirmed against the live API on 40
+articles. The *delivery* is not: two of the four kills (downloader,
+disambiguation) are straightforward work, but the `top1m` supply risk is
+structural. Recommended shape: ship **`top` (25 MB)** first, snapshot the ZIM
+we built from, and treat `top1m` as a later tier taken only if Kiwix resumes
+generating it.
+
 ### Round 1 & 2 (plan-refute protocol, codex-cli 0.144.6 cross-model)
 
 ### Round 1 — Kotlin vs Flutter (2026-07-29)
