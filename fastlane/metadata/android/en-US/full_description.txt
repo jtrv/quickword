@@ -8,10 +8,12 @@ Features:
 • Lookup from any app's text-selection menu or share sheet
 • Notification actions: Thesaurus (swaps to synonyms in place), Open, Save
 • 1.4 million words from the English Wiktionary (CC BY-SA), fully offline
-• Wikipedia fallback for names and places (with attribution)
+• Wikipedia fallback for names and places (with attribution), with an
+  optional offline pack of the 50,000 most-read articles
 • Serif-typeset word pages, prefix search, recents and favourites
 • Pronunciation (IPA + text-to-speech)
 • No ads, no tracking, no accounts. MIT licensed.
 
 The full dictionary (~120 MB) is downloaded once on first run; a small
-starter dictionary is bundled so the app works immediately.
+starter dictionary is bundled so the app works immediately. The offline
+Wikipedia pack (38 MB) is optional — get it from About → Storage & data.
