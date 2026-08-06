@@ -77,6 +77,8 @@ CC BY-SA 4.0 + attribution files.
 
 | M10 ✅ | Cross-model review (Codex, 12 findings) actioned: false "nothing leaves your device" claim corrected, PROCESS_TEXT input bounded, as-typed candidate added so non-ASCII headwords (`Übermensch`) stop falling through to Wikipedia, bundled-DB extraction made atomic, SQLite handles closed in the trampoline and receivers, download verification counts real rows instead of trusting `meta`, stale-download reconciliation, `PAUSED_QUEUED_FOR_WIFI` handled, TTS engine dropped when unusable, word page re-resolves after a dictionary install. Search field moved to the bottom of the screen | `mise run verify` green; bottom-bar layout verified on device with a docked keyboard |
 
+| M11 ✅ | Offline Wikipedia, opt-in: `etl/build_wiki.py` turns a Kiwix mini ZIM into a 37.9 MB SQLite of 49,918 lead paragraphs + 823,870 aliases (their curation, our format — 6.9× smaller than the ZIM, libzim build-time only so nothing GPL ships). Rows are raw DEFLATE against a preset dictionary stored in the file. `DictionaryDownloader` generalised to `CorpusDownloader` + `Corpus` so two data sets can coexist. Offered from About → Storage & data; tried before the network in both the app and the trampoline | 5 `WikiCorpusTest` cases (round-trip, exact-case-beats-NOCASE, alias, missing corpus, unknown title); ETL self-asserts a round-trip; **verified on device in airplane mode** — "Accenture" and "Acrocanthosaurus" answered from the corpus with no network |
+
 ## Known gaps at launch (deliberate, not forgotten)
 
 - **Launcher icon is still the M0 placeholder** (`ic_launcher_foreground.xml`

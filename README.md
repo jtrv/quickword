@@ -23,7 +23,11 @@ rebuilt in Kotlin + Jetpack Compose with modern Wiktionary data.
   [`etl/build_db.py`](etl/build_db.py), shipped as a
   [GitHub Release](../../releases) the app downloads on first run
   (a small starter dictionary is bundled).
-- Wikipedia summaries: Wikimedia REST API, CC BY-SA.
+- Wikipedia summaries: Wikimedia REST API, CC BY-SA. Optionally offline — an
+  opt-in 38 MB corpus of the top 50,000 article lead paragraphs, built from a
+  [Kiwix](https://kiwix.org) mini ZIM by [`etl/build_wiki.py`](etl/build_wiki.py).
+  Kiwix has already solved which articles matter and how to get a clean lead out
+  of wikitext; libzim is a build-time tool only, so nothing GPL ships.
 
 ## Building
 
@@ -33,6 +37,7 @@ mise run verify      # the whole gate: palette/schema parity, ktlint, detekt, li
 mise run build       # debug APK
 mise run shots       # render screens to PNGs (Roborazzi)
 mise run etl         # rebuild the dictionary DB from a kaikki dump
+mise run etl:wiki    # rebuild the offline Wikipedia corpus from a Kiwix ZIM
 mise run build:release  # R8-minified release APK
 mise run bundle         # Play upload AAB
 mise run store-assets   # regenerate listing images in fastlane/metadata

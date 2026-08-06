@@ -27,11 +27,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.jtrv.quickword.R
-import io.github.jtrv.quickword.data.DictionaryDownloader
+import io.github.jtrv.quickword.data.CorpusDownloader
 import io.github.jtrv.quickword.data.DictionaryRepository
 import io.github.jtrv.quickword.data.HistoryEntry
 import io.github.jtrv.quickword.data.HistoryStore
 import io.github.jtrv.quickword.data.Suggestion
+import io.github.jtrv.quickword.data.WikiCorpus
 import io.github.jtrv.quickword.data.WikipediaApi
 import io.github.jtrv.quickword.ui.about.AboutScreen
 import io.github.jtrv.quickword.ui.search.SearchScreen
@@ -46,7 +47,9 @@ import kotlinx.coroutines.launch
 fun QuickWordApp(
     repository: DictionaryRepository,
     history: HistoryStore,
-    downloader: DictionaryDownloader? = null,
+    downloader: CorpusDownloader? = null,
+    wikiDownloader: CorpusDownloader? = null,
+    wikiCorpus: WikiCorpus? = null,
     initialWord: String? = null,
     notificationsMuted: Boolean = false,
     onFixNotifications: () -> Unit = {},
@@ -77,7 +80,9 @@ fun QuickWordApp(
                 history.recordLookup(entries.first().word)
                 LookupResult.Entries(entries)
             } else {
-                WikipediaApi().summary(word)?.let(LookupResult::Wiki) ?: LookupResult.None
+                // Offline corpus first when installed — same answer, no network.
+                val wiki = wikiCorpus?.summary(word) ?: WikipediaApi().summary(word)
+                wiki?.let(LookupResult::Wiki) ?: LookupResult.None
             }
     }
     val favourite by produceState(false, openWord, historyVersion) {
@@ -98,7 +103,7 @@ fun QuickWordApp(
             if (notificationsMuted) {
                 MutedBanner(onFixNotifications)
             }
-            if (downloader != null && !downloader.hasFullDictionary) {
+            if (downloader != null && !downloader.isInstalled) {
                 DownloadBanner(downloader) {
                     repository.reopen()
                     dictVersion++
@@ -108,12 +113,12 @@ fun QuickWordApp(
             when {
                 showAbout -> {
                     BackHandler { showAbout = false }
-                    AboutScreen(
-                        // Keyed on dictVersion so removing or downloading the
-                        // full dictionary re-reads the size instead of lying.
-                        dictionaryBytes = remember(dictVersion) { downloader?.fullDictionaryBytes ?: 0L },
-                        onRemoveDictionary = {
-                            downloader?.removeFullDictionary()
+                    AboutDestination(
+                        dictionary = downloader,
+                        wikiDownloader = wikiDownloader,
+                        wikiCorpus = wikiCorpus,
+                        dictVersion = dictVersion,
+                        onCorpusChanged = {
                             repository.reopen()
                             dictVersion++
                         },
@@ -152,6 +157,38 @@ fun QuickWordApp(
             }
         }
     }
+}
+
+/** Keeps the nullable-corpus plumbing out of [QuickWordApp]'s own branching. */
+@Composable
+private fun AboutDestination(
+    dictionary: CorpusDownloader?,
+    wikiDownloader: CorpusDownloader?,
+    wikiCorpus: WikiCorpus?,
+    dictVersion: Int,
+    onCorpusChanged: () -> Unit,
+    onClearHistory: () -> Unit,
+) {
+    AboutScreen(
+        // Keyed on dictVersion so installing or removing a corpus re-reads the
+        // size instead of lying about it.
+        dictionaryBytes = remember(dictVersion) { dictionary?.installedBytes ?: 0L },
+        wikiBytes = remember(dictVersion) { wikiCorpus?.bytes ?: 0L },
+        wikiDownloader = wikiDownloader,
+        onRemoveDictionary = {
+            dictionary?.removeInstalled()
+            onCorpusChanged()
+        },
+        onWikiChanged = {
+            wikiCorpus?.reopen()
+            onCorpusChanged()
+        },
+        onRemoveWiki = {
+            wikiCorpus?.remove()
+            onCorpusChanged()
+        },
+        onClearHistory = onClearHistory,
+    )
 }
 
 /**

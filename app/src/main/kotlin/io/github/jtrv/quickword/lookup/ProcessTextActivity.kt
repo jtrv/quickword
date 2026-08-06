@@ -7,6 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import io.github.jtrv.quickword.MainActivity
 import io.github.jtrv.quickword.data.DictionaryRepository
 import io.github.jtrv.quickword.data.HistoryStore
+import io.github.jtrv.quickword.data.WikiCorpus
 import io.github.jtrv.quickword.data.WikipediaApi
 import kotlinx.coroutines.launch
 
@@ -69,8 +70,11 @@ class ProcessTextActivity : ComponentActivity() {
             notifier.showEntries(entries)
             return
         }
-        // No dictionary hit: proper nouns and names live on Wikipedia.
-        val wiki = WikipediaApi().summary(candidates.first())
-        if (wiki != null) notifier.showWiki(wiki) else notifier.showNoEntry(candidates.first())
+        // No dictionary hit: proper nouns and names live on Wikipedia. The
+        // offline corpus answers without a network round trip when installed,
+        // which also keeps the trampoline fast.
+        val term = candidates.first()
+        val wiki = WikiCorpus(applicationContext).summary(term) ?: WikipediaApi().summary(term)
+        if (wiki != null) notifier.showWiki(wiki) else notifier.showNoEntry(term)
     }
 }

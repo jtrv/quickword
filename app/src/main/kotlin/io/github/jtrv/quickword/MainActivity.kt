@@ -10,9 +10,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.mutableStateOf
-import io.github.jtrv.quickword.data.DictionaryDownloader
+import io.github.jtrv.quickword.data.Corpus
+import io.github.jtrv.quickword.data.CorpusDownloader
 import io.github.jtrv.quickword.data.DictionaryRepository
 import io.github.jtrv.quickword.data.HistoryStore
+import io.github.jtrv.quickword.data.WikiCorpus
 import io.github.jtrv.quickword.lookup.LookupChannel
 import io.github.jtrv.quickword.ui.QuickWordApp
 import io.github.jtrv.quickword.ui.theme.QuickWordTheme
@@ -38,7 +40,9 @@ class MainActivity : ComponentActivity() {
                 QuickWordApp(
                     repository = repository,
                     history = history,
-                    downloader = DictionaryDownloader(applicationContext),
+                    downloader = CorpusDownloader(applicationContext, Corpus.DICTIONARY),
+                    wikiDownloader = CorpusDownloader(applicationContext, Corpus.WIKIPEDIA),
+                    wikiCorpus = WikiCorpus(applicationContext),
                     initialWord = initialWord,
                     notificationsMuted = muted.value,
                     onFixNotifications = ::openChannelSettings,

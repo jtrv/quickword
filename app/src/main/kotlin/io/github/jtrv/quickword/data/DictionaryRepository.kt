@@ -44,7 +44,7 @@ class DictionaryRepository(
 
     // Full downloaded dictionary wins; bundled fixture is the fallback tier.
     private fun resolveDb(): File {
-        val full = File(context.noBackupFilesDir, DictionaryDownloader.FULL_DB_NAME)
+        val full = File(context.noBackupFilesDir, Corpus.DICTIONARY.fileName)
         return if (full.exists()) full else ensureExtracted()
     }
 

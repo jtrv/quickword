@@ -1,5 +1,6 @@
 package io.github.jtrv.quickword.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,7 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.jtrv.quickword.R
-import io.github.jtrv.quickword.data.DictionaryDownloader
+import io.github.jtrv.quickword.data.CorpusDownloader
 import kotlinx.coroutines.delay
 
 private const val PERCENT = 100
@@ -28,17 +29,18 @@ private const val POLL_MS = 500L
 private const val IDLE_POLL_MS = 5_000L
 
 /**
- * Drives the ~120 MB dictionary download. DownloadManager owns the transfer, so
+ * Drives a corpus download — the dictionary, or the offline Wikipedia corpus. DownloadManager owns the transfer, so
  * this polls its status rather than holding progress itself — which is what lets
  * the download survive leaving the app, and lets the banner pick a download back
  * up on the next launch instead of offering to start a second one.
  */
 @Composable
 fun DownloadBanner(
-    downloader: DictionaryDownloader,
+    downloader: CorpusDownloader,
+    @StringRes idleText: Int = R.string.dict_banner,
     onInstalled: () -> Unit,
 ) {
-    var state by remember { mutableStateOf<DictionaryDownloader.State>(DictionaryDownloader.State.Absent) }
+    var state by remember { mutableStateOf<CorpusDownloader.State>(CorpusDownloader.State.Absent) }
     var attempt by remember { mutableIntStateOf(0) }
     var failed by remember { mutableStateOf(false) }
     var confirmMetered by remember { mutableStateOf(false) }
@@ -48,7 +50,7 @@ fun DownloadBanner(
         while (true) {
             val current = downloader.state()
             state = current
-            if (current is DictionaryDownloader.State.Ready) {
+            if (current is CorpusDownloader.State.Ready) {
                 val installed = downloader.install().isSuccess
                 if (installed) {
                     onInstalled()
@@ -60,7 +62,7 @@ fun DownloadBanner(
                 }
                 return@LaunchedEffect
             }
-            if (current is DictionaryDownloader.State.Failed) {
+            if (current is CorpusDownloader.State.Failed) {
                 downloader.cancel()
                 failed = true
                 return@LaunchedEffect
@@ -68,7 +70,7 @@ fun DownloadBanner(
             // Idle is the common case — most sessions never start a download and
             // must not pay a 2 Hz timer for the privilege. Polling only tightens
             // once there is progress to report.
-            delay(if (current is DictionaryDownloader.State.Downloading) POLL_MS else IDLE_POLL_MS)
+            delay(if (current is CorpusDownloader.State.Downloading) POLL_MS else IDLE_POLL_MS)
         }
     }
 
@@ -83,7 +85,7 @@ fun DownloadBanner(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = bannerText(state, failed),
+                text = bannerText(state, failed, idleText),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
@@ -114,13 +116,14 @@ fun DownloadBanner(
 
 @Composable
 private fun bannerText(
-    state: DictionaryDownloader.State,
+    state: CorpusDownloader.State,
     failed: Boolean,
+    @StringRes idleText: Int,
 ): String =
     when {
         failed -> stringResource(R.string.dict_failed)
-        state is DictionaryDownloader.State.Ready -> stringResource(R.string.dict_installing)
-        state !is DictionaryDownloader.State.Downloading -> stringResource(R.string.dict_banner)
+        state is CorpusDownloader.State.Ready -> stringResource(R.string.dict_installing)
+        state !is CorpusDownloader.State.Downloading -> stringResource(idleText)
         state.waitingForNetwork -> stringResource(R.string.dict_waiting_wifi)
         state.fraction >= 0f ->
             stringResource(R.string.dict_downloading, (state.fraction * PERCENT).toInt())
@@ -129,7 +132,7 @@ private fun bannerText(
 
 @Composable
 private fun BannerAction(
-    state: DictionaryDownloader.State,
+    state: CorpusDownloader.State,
     failed: Boolean,
     onRetry: () -> Unit,
     onUseMobile: () -> Unit,
@@ -137,9 +140,9 @@ private fun BannerAction(
 ) {
     when {
         failed -> TextButton(onRetry) { Text(stringResource(R.string.dict_retry)) }
-        state is DictionaryDownloader.State.Downloading && state.waitingForNetwork ->
+        state is CorpusDownloader.State.Downloading && state.waitingForNetwork ->
             TextButton(onUseMobile) { Text(stringResource(R.string.dict_use_mobile)) }
-        state is DictionaryDownloader.State.Absent ->
+        state is CorpusDownloader.State.Absent ->
             TextButton(onStart) { Text(stringResource(R.string.dict_download)) }
         // Running or installing: nothing useful for a button to do.
         else -> Unit

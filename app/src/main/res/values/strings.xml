@@ -43,7 +43,7 @@
     <string name="about_dictionary_heading">Dictionary</string>
     <string name="about_dictionary">Definitions and synonyms come from the English Wiktionary, extracted by kaikki.org. Wiktionary text is © its contributors and licensed CC BY-SA 4.0; this app redistributes it under the same licence.</string>
     <string name="about_wikipedia_heading">Wikipedia</string>
-    <string name="about_wikipedia">Words with no dictionary entry fall back to Wikipedia summaries via the Wikimedia REST API — © Wikipedia contributors, CC BY-SA 4.0.</string>
+    <string name="about_wikipedia">Words with no dictionary entry fall back to Wikipedia summaries — © Wikipedia contributors, CC BY-SA 4.0. Download the offline corpus below and they are answered on the device instead of over the network.</string>
     <string name="about_fonts_heading">Fonts</string>
     <string name="about_fonts">Literata and Inter, both under the SIL Open Font License 1.1. The full licence texts are reproduced below.</string>
     <string name="about_code_heading">App</string>
@@ -55,6 +55,9 @@
     <string name="about_dictionary_full">Full dictionary — %1$s on this device</string>
     <string name="about_dictionary_starter">Starter dictionary only (bundled with the app)</string>
     <string name="about_remove_dictionary">Remove download</string>
+    <string name="about_wiki_offer">Offline Wikipedia — top 50,000 articles (38 MB)</string>
+    <string name="about_wiki_installed">Offline Wikipedia — %1$s on this device</string>
+    <string name="about_remove_wiki">Remove offline Wikipedia</string>
     <string name="about_clear_history">Clear recents &amp; favourites</string>
     <string name="about_clear_confirm_title">Clear recents and favourites?</string>
     <string name="about_clear_confirm_body">Every word you have looked up or starred will be deleted from this device. This cannot be undone.</string>

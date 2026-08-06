@@ -109,3 +109,24 @@ mean an unbuildable release, an R8 regression, a palette that drifted from
 `DESIGN.md`, or a dictionary schema that drifted from the ETL cannot reach a
 tag. The gate is the same script locally and in CI, so "works on my machine"
 is not a category of failure here.
+
+## 5. The offline Wikipedia corpus
+
+Built from a Kiwix mini ZIM, not from a Wikimedia dump — Kiwix has already
+decided which articles matter and extracted clean lead sections:
+
+```sh
+curl -O https://download.kiwix.org/zim/wikipedia/wikipedia_en_top_mini_<date>.zim
+mv wikipedia_en_top_mini_*.zim etl/data/wikipedia_en_top_mini.zim
+mise run etl:wiki                       # ~5 min → etl/data/quickword-wiki-top.db
+gzip -9 -c etl/data/quickword-wiki-top.db > quickword-wiki.db.gz
+```
+
+Publish the gzip as `quickword-wiki.db.gz` on a release tagged
+`wiki-en-top-v1`, which is the URL `Corpus.WIKIPEDIA` points at. Changing the
+tag means shipping an app update, so bump the tag only when the schema changes
+— a refreshed corpus can reuse it.
+
+**Keep the source ZIM.** Kiwix has generated `wikipedia_en_top1m_mini` exactly
+once and has had English Wikipedia runs fail outright, so the archive you built
+from may not exist next year (PLAN.md refutation round 4).

@@ -27,6 +27,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.jtrv.quickword.BuildConfig
 import io.github.jtrv.quickword.R
+import io.github.jtrv.quickword.data.CorpusDownloader
+import io.github.jtrv.quickword.ui.DownloadBanner
 
 /**
  * Attribution and licences. Not decoration: CC BY-SA 4.0 (Wiktionary data,
@@ -40,6 +42,10 @@ fun AboutScreen(
     onRemoveDictionary: () -> Unit,
     onClearHistory: () -> Unit,
     modifier: Modifier = Modifier,
+    wikiBytes: Long = 0L,
+    wikiDownloader: CorpusDownloader? = null,
+    onWikiChanged: () -> Unit = {},
+    onRemoveWiki: () -> Unit = {},
 ) {
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
@@ -88,7 +94,11 @@ fun AboutScreen(
         }
         Storage(
             dictionaryBytes = dictionaryBytes,
+            wikiBytes = wikiBytes,
+            wikiDownloader = wikiDownloader,
             onRemoveDictionary = onRemoveDictionary,
+            onRemoveWiki = onRemoveWiki,
+            onWikiChanged = onWikiChanged,
             onClearHistory = onClearHistory,
         )
         licences.forEach { text ->
@@ -110,7 +120,11 @@ fun AboutScreen(
 @Composable
 private fun Storage(
     dictionaryBytes: Long,
+    wikiBytes: Long,
+    wikiDownloader: CorpusDownloader?,
     onRemoveDictionary: () -> Unit,
+    onRemoveWiki: () -> Unit,
+    onWikiChanged: () -> Unit,
     onClearHistory: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -142,6 +156,31 @@ private fun Storage(
             Text(stringResource(R.string.about_remove_dictionary))
         }
     }
+    // Offline Wikipedia: opt-in, and the only place it is offered. The fallback
+    // works online without it, so it never earns a banner on the main screen.
+    if (wikiBytes > 0) {
+        Text(
+            text =
+                stringResource(
+                    R.string.about_wiki_installed,
+                    Formatter.formatShortFileSize(context, wikiBytes),
+                ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 12.dp),
+        )
+        TextButton(onClick = onRemoveWiki) {
+            Text(stringResource(R.string.about_remove_wiki))
+        }
+    } else if (wikiDownloader != null) {
+        Spacer(Modifier.height(12.dp))
+        DownloadBanner(
+            downloader = wikiDownloader,
+            onInstalled = onWikiChanged,
+            idleText = R.string.about_wiki_offer,
+        )
+    }
+
     TextButton(onClick = { confirmClear = true }) {
         Text(stringResource(R.string.about_clear_history))
     }

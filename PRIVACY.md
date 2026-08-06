@@ -33,6 +33,8 @@ QuickWord contacts exactly three kinds of destination, and none of them is ours:
    to Wikimedia, which sees it along with your IP address, under the
    [Wikimedia privacy policy](https://foundation.wikimedia.org/wiki/Policy:Privacy_policy).
    Words that the offline dictionary can answer are never sent anywhere.
+   **Installing the optional offline Wikipedia corpus removes this case too**:
+   an article it contains is answered from the device, and nothing is sent.
 3. **Your device's text-to-speech engine**, when you tap *Listen*. QuickWord
    hands the word to whichever TTS engine you have installed; some engines
    synthesise speech in the cloud. What happens then is governed by that

@@ -50,6 +50,11 @@ run = "./gradlew --console=plain ktlintCheck detekt lintDebug"
 description = "Roborazzi: record real screens to PNGs for visual review (both themes)"
 run = "./gradlew --console=plain :app:testDebugUnitTest -Pshots --tests '*Shots'"
 
+[tasks."etl:wiki"]
+description = "Build the offline Wikipedia corpus from a Kiwix mini ZIM (see PLAN.md M11)"
+dir = "etl"
+run = "uv run --with libzim build_wiki.py --input data/wikipedia_en_top_mini.zim --output data/quickword-wiki-top.db"
+
 [tasks.etl]
 description = "Build the dictionary SQLite from kaikki + OEWN (see PLAN.md M1)"
 dir = "etl"
