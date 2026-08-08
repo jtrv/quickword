@@ -9,11 +9,15 @@ script.
 `versionCode` must increase on every upload and never be reused; `versionName`
 is what users see. Both live in `app/build.gradle.kts`.
 
+**1.0.0 (`versionCode` 1) is already cut and tagged `v1.0.0`** — it is what goes
+to Play and F-Droid first. The steps below are for the release *after* it, so
+substitute the new version throughout:
+
 ```sh
 # bump versionCode/versionName, add fastlane/metadata/android/en-US/changelogs/<versionCode>.txt
 mise run verify
-git commit -am "release: 1.0.0"
-git tag -a v1.0.0 -m "QuickWord 1.0.0" && git push --follow-tags
+git commit -am "release: 1.0.1"
+git tag -a v1.0.1 -m "QuickWord 1.0.1" && git push --follow-tags
 ```
 
 The tag matters beyond bookkeeping: F-Droid's update checker watches tags, so a
