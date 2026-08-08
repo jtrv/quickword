@@ -64,6 +64,29 @@ The listing text and images come straight out of `fastlane/metadata/android/en-U
 | Phone screenshots (≥2) | `images/phoneScreenshots/*.png` |
 | Privacy policy URL | `https://github.com/jtrv/quickword/blob/main/PRIVACY.md` |
 
+**Re-recording the three device screenshots.** `mise run shots` covers the
+in-app ones; the shade shots (`app/shots/device_*.png`) are captured by hand and
+are easy to get wrong — the first set shipped with Android's "Notification
+cooldown is now on" card sitting above the app, and the expanded one had no
+QuickWord notification in it at all. On a freshly booted emulator:
+
+```sh
+adb shell settings put system notification_cooldown_enabled 0   # or it posts its own card
+adb shell settings put global sysui_demo_allowed 1              # clean status bar
+adb shell am broadcast -a com.android.systemui.demo -e command enter
+adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 0930
+adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false
+adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 -e fully true
+adb shell am broadcast -a com.android.systemui.demo -e command network -e mobile hide
+```
+
+Swipe away any leftover system notifications first — the emulator posts "Serial
+console enabled" on every boot. Then trigger, open the shade and capture in one
+scripted run: `LookupNotifier` sets `setTimeoutAfter(30_000)`, so a shot taken
+more than 30 s after the lookup catches an empty shade. `petrichor` and `quick`
+both live in the bundled starter dictionary, so this needs no 280 MB download.
+Drop `-e fully true` and the Wi-Fi icon renders with a "no internet" `!`.
+
 **Data safety form.** No accounts, no ads, no analytics, no crash reporting, and
 nothing is persisted off-device — so *Data collected: none* and *Data shared:
 none* is the honest answer. One nuance worth deciding deliberately rather than
