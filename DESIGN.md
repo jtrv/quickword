@@ -110,7 +110,7 @@ Pair on the serif/sans contrast axis; both variable fonts, bundled:
 - **Wikipedia card**: thumbnail right (56dp, 12dp radius), 2–3 line extract,
   "From Wikipedia" attribution caption — matches the Page Previews contract.
 - **Notification**: BigTextStyle; title = headword · POS, body = top 1–2
-  glosses; actions `[Thesaurus] [Open] [★]`.
+  glosses; actions `[Thesaurus] [Open] [Save]`.
 - Every interactive component ships default/pressed/focused/disabled states;
   loading is skeleton lines (never a centered spinner on content surfaces).
 

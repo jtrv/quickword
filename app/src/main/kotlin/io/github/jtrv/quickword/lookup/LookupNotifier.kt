@@ -143,7 +143,7 @@ class LookupNotifier(
         }
         builder.addAction(actionOf(R.string.action_open, openIntent))
         if (withFavourite) {
-            // DESIGN.md action budget: [Thesaurus] [Open] [★]; Share lives in-app.
+            // DESIGN.md action budget: [Thesaurus] [Open] [Save]; Share lives in-app.
             val favIntent =
                 PendingIntent.getBroadcast(
                     context,

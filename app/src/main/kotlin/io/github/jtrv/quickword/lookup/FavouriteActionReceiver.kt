@@ -8,7 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-/** The notification's ★ button: mark the word favourite, no UI. */
+/** The notification's Save button: mark the word favourite, no UI. */
 class FavouriteActionReceiver : BroadcastReceiver() {
     override fun onReceive(
         context: Context,

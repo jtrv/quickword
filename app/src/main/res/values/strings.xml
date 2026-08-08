@@ -9,7 +9,7 @@
     <string name="channel_description">Definitions shown when you look up a selected word</string>
     <string name="action_open">Open</string>
     <string name="action_thesaurus">Thesaurus</string>
-    <string name="action_favourite">★ Save</string>
+    <string name="action_favourite">Save</string>
     <string name="favourite_toggle">Toggle favourite</string>
     <string name="recent_heading">Recent</string>
     <string name="synonyms_title">%1$s · synonyms</string>

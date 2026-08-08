@@ -9,7 +9,7 @@ rebuilt in Kotlin + Jetpack Compose with modern Wiktionary data.
 ## How it works
 
 - Select text in any app → **QuickWord** in the selection menu (or Share) →
-  a heads-up notification with the definition and `[Thesaurus] [Open] [★ Save]`
+  a heads-up notification with the definition and `[Thesaurus] [Open] [Save]`
   actions. The Thesaurus button swaps the notification to synonyms in place.
 - No dictionary hit? The word is looked up on **Wikipedia** (proper nouns,
   places, people) — with attribution.

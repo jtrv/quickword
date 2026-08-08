@@ -12,7 +12,7 @@ Compose BOM + Material 3, minSdk 26, targetSdk latest.
 ```
 app/src/main/kotlin/dev/quickword/
   lookup/      ProcessTextActivity (translucent trampoline: PROCESS_TEXT + SEND)
-               LookupNotifier (BigTextStyle + [Thesaurus][Open][★] actions)
+               LookupNotifier (BigTextStyle + [Thesaurus][Open][Save] actions)
                ThesaurusActionReceiver (swaps notification content in place)
   data/        QuickwordDb (Room, prebuilt DB via createFromFile)
                words/senses/synonyms DAOs; HistoryDao (app-writable DB)
