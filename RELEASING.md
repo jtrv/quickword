@@ -48,8 +48,12 @@ Verify the build picked the real key up rather than the debug fallback:
 
 ```sh
 mise run bundle
-apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
+keytool -printcert -jarfile app/build/outputs/bundle/release/app-release.aab
 ```
+
+The Owner must be `CN=QuickWord`, not `CN=Android Debug`. Check the AAB, not
+`app/build/outputs/apk/release/app-release.apk` — `mise run bundle` does not
+rebuild the APK, so a stale debug-signed one can sit there and mislead.
 
 ## 3. Google Play
 
