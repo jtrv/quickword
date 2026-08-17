@@ -9,7 +9,7 @@ script.
 `versionCode` must increase on every upload and never be reused; `versionName`
 is what users see. Both live in `app/build.gradle.kts`.
 
-**1.0.0 (`versionCode` 1) is already cut and tagged `v1.0.0`** — it is what goes
+**1.0.0 (`versionCode` 1) is already cut and tagged `v1.0.0`**; it is what goes
 to Play and F-Droid first. The steps below are for the release *after* it, so
 substitute the new version throughout:
 
@@ -41,7 +41,7 @@ keyPassword=…
 
 **Back the `.jks` up somewhere you will still have in five years.** Play Signing
 means Google holds the *app* signing key, so a lost upload key is recoverable
-via support — but F-Droid publishes under its own key with no such escape
+via support. F-Droid, though, publishes under its own key with no such escape
 hatch, and losing a key there means the app can never be updated in place.
 
 Verify the build picked the real key up rather than the debug fallback:
@@ -52,7 +52,7 @@ keytool -printcert -jarfile app/build/outputs/bundle/release/app-release.aab
 ```
 
 The Owner must be `CN=QuickWord`, not `CN=Android Debug`. Check the AAB, not
-`app/build/outputs/apk/release/app-release.apk` — `mise run bundle` does not
+`app/build/outputs/apk/release/app-release.apk`: `mise run bundle` does not
 rebuild the APK, so a stale debug-signed one can sit there and mislead.
 
 ## 3. Google Play
@@ -74,7 +74,7 @@ The listing text and images come straight out of `fastlane/metadata/android/en-U
 
 **Re-recording the three device screenshots.** `mise run shots` covers the
 in-app ones; the shade shots (`app/shots/device_*.png`) are captured by hand and
-are easy to get wrong — the first set shipped with Android's "Notification
+are easy to get wrong. The first set shipped with Android's "Notification
 cooldown is now on" card sitting above the app, and the expanded one had no
 QuickWord notification in it at all. On a freshly booted emulator:
 
@@ -88,7 +88,7 @@ adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi s
 adb shell am broadcast -a com.android.systemui.demo -e command network -e mobile hide
 ```
 
-Swipe away any leftover system notifications first — the emulator posts "Serial
+Swipe away any leftover system notifications first; the emulator posts "Serial
 console enabled" on every boot. Then trigger, open the shade and capture in one
 scripted run: `LookupNotifier` sets `setTimeoutAfter(30_000)`, so a shot taken
 more than 30 s after the lookup catches an empty shade. `petrichor` and `quick`
@@ -96,13 +96,14 @@ both live in the bundled starter dictionary, so this needs no 280 MB download.
 Drop `-e fully true` and the Wi-Fi icon renders with a "no internet" `!`.
 
 **Data safety form.** No accounts, no ads, no analytics, no crash reporting, and
-nothing is persisted off-device — so *Data collected: none* and *Data shared:
+nothing is persisted off-device, so *Data collected: none* and *Data shared:
 none* is the honest answer. One nuance worth deciding deliberately rather than
 clicking past: when a word has no dictionary entry, that word is sent to the
-Wikimedia API. QuickWord neither stores nor receives it back, which fits
-Google's ephemeral-processing carve-out, but if you would rather over-disclose
-than argue the point later, declare it under *App activity → Other user-generated
-content*, processed ephemerally, not shared. `PRIVACY.md` describes it either way.
+Wikimedia API. QuickWord sends it once, keeps no copy, and gets none back,
+which fits Google's ephemeral-processing carve-out. If you would rather
+over-disclose than argue the point later, declare it under *App activity →
+Other user-generated content* with the *processed ephemerally* flag set and
+sharing declared as none. `PRIVACY.md` describes it either way.
 
 Content rating: dictionary/reference, no user interaction, no ads. Note in the
 questionnaire that definitions come from an unfiltered general-purpose
@@ -111,18 +112,18 @@ dictionary does).
 
 ## 4. F-Droid
 
-QuickWord ships on both stores, with Play as the primary channel — F-Droid
+QuickWord ships on both stores, with Play as the primary channel. F-Droid
 review takes weeks and should run in parallel rather than gate the launch.
 
 F-Droid builds from source on their own infrastructure and signs with their own
-key, so **the F-Droid build and the Play build are not interchangeable** — a
+key, so **the F-Droid build and the Play build are not interchangeable**: a
 user cannot update from one to the other without uninstalling. That is a
 property of publishing to both, not a problem to solve; it only needs saying out
 loud if a user ever asks why switching stores wants a reinstall.
 
 1. Open a request at [gitlab.com/fdroid/rfp](https://gitlab.com/fdroid/rfp/-/issues)
    with the repo URL and the tag from step 1. Ask for `Donate: https://ko-fi.com/jtrvs`
-   in the metadata — F-Droid renders a donate button from that field, and it is
+   in the metadata; F-Droid renders a donate button from that field, and it is
    easier to include up front than to add later.
 2. They will write a build recipe in `fdroiddata`. Nothing in this repo blocks
    it: dependencies are androidx/Compose only, the build needs no proprietary
@@ -143,8 +144,8 @@ is not a category of failure here.
 
 ## 5. The offline Wikipedia corpus
 
-Built from a Kiwix mini ZIM, not from a Wikimedia dump — Kiwix has already
-decided which articles matter and extracted clean lead sections:
+Built from a Kiwix mini ZIM, not from a Wikimedia dump: Kiwix has already
+decided which articles matter and extracted clean lead sections.
 
 ```sh
 curl -O https://download.kiwix.org/zim/wikipedia/wikipedia_en_top_mini_<date>.zim
@@ -155,8 +156,8 @@ gzip -9 -c etl/data/quickword-wiki-top.db > quickword-wiki.db.gz
 
 Publish the gzip as `quickword-wiki.db.gz` on a release tagged
 `wiki-en-top-v1`, which is the URL `Corpus.WIKIPEDIA` points at. Changing the
-tag means shipping an app update, so bump the tag only when the schema changes
-— a refreshed corpus can reuse it.
+tag means shipping an app update, so bump the tag only when the schema
+changes; a refreshed corpus can reuse it.
 
 **Keep the source ZIM.** Kiwix has generated `wikipedia_en_top1m_mini` exactly
 once and has had English Wikipedia runs fail outright, so the archive you built

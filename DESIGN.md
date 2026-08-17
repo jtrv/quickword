@@ -1,21 +1,21 @@
 # Design
 
 Visual system for QuickWord (Android, Jetpack Compose, Material 3). Register:
-product (see PRODUCT.md). Theme scene: *reading in bed at 11pm — the app must
-be glanceable in the dark and unremarkable in daylight.* Both themes are
+product (see PRODUCT.md). Theme scene: *reading in bed at 11pm*. The app must
+be glanceable in the dark and unremarkable in daylight. Both themes are
 first-class; follow the system setting.
 
 ## Color
 
-Strategy: **Restrained** — neutral surfaces, one brand accent (magenta-rose,
+Strategy: **Restrained**. Neutral surfaces, one brand accent (magenta-rose,
 hue 330) for primary actions/selection/links, one reserved role color
 (green, hue 155) exclusively for thesaurus/synonym affordances. Fixed brand
-palette; **no Material You dynamic color** (user decision 2026-07-29 —
+palette; **no Material You dynamic color** (user decision 2026-07-29:
 identity and testability over wallpaper-matching).
 
 All values authored in OKLCH, shipped as sRGB hex. Every text/bg pair below
-verified ≥ 4.5:1 (WCAG AA) by `tool/palette.py` — re-run it whenever a token
-changes; lowest passing pair today is 7.34:1.
+verified ≥ 4.5:1 (WCAG AA) by `tool/palette.py`; re-run it whenever a token
+changes. Lowest passing pair today is 7.34:1.
 
 ### Light scheme (M3 ColorScheme roles)
 
@@ -60,27 +60,27 @@ changes; lowest passing pair today is 7.34:1.
 ### Usage rules
 
 - Surfaces are near-neutral (chroma ≤ 0.014, tinted toward 330). Light bg is
-  literal `#FFFFFF` — no hidden warmth, no cream (see PRODUCT.md
+  literal `#FFFFFF`: no hidden warmth, no cream (see PRODUCT.md
   anti-references).
-- **Tertiary green is reserved**: synonym chips, the Thesaurus notification
+- Tertiary green is reserved: synonym chips, the Thesaurus notification
   action, thesaurus screen accents. It never decorates anything else, so the
   color itself carries meaning.
 - Primary appears on: FAB/primary buttons, selected states, tappable
   cross-reference words inside definitions, the headword accent. Not on
   body text, card borders, or decoration.
-- Semantic tokens only in composables — raw hex lives once, in
+- Semantic tokens only in composables; raw hex lives once, in
   `ui/theme/Color.kt`, mirrored from this file.
 
 ## Typography
 
-Pair on the serif/sans contrast axis; both variable fonts, bundled:
+Pair on the serif/sans contrast axis; both variable fonts, bundled.
+Literata (variable, Google Fonts, OFL) sets headwords, entry display, and
+word-of-nothing (no gimmicks), filling the `displayLarge`→`titleMedium`
+slots; headword on the word page is Literata 36/44, weight 500 (opsz auto).
+Inter (variable, OFL) sets everything else: labels, body, definitions,
+buttons, navigation. Definitions are Inter `bodyLarge` 16/24; dense lists
+`bodyMedium` 14/20.
 
-- **Literata** (variable, Google Fonts, OFL) — headwords, entry display,
-  word-of-nothing (no gimmicks): `displayLarge`→`titleMedium` slots.
-  Headword on the word page: Literata 36/44, weight 500 (opsz auto).
-- **Inter** (variable, OFL) — everything else: labels, body, definitions,
-  buttons, navigation. Definitions are Inter `bodyLarge` 16/24; dense lists
-  `bodyMedium` 14/20.
 - Fixed rem-equivalent scale (M3 type scale, ratio ~1.17), no fluid sizing.
 - IPA pronunciation: Inter, `onSurfaceVariant`, never italic (IPA glyphs
   must stay upright).
@@ -98,25 +98,21 @@ Pair on the serif/sans contrast axis; both variable fonts, bundled:
 
 ## Components (canonical vocabulary)
 
-- **Entry sense block**: sense number (tabular, `onSurfaceVariant`) + gloss
-  (Inter body) + optional example (italic, `onSurfaceVariant`) + synonym
-  chips (tertiary, max 6 shown, "+n" overflow).
-- **POS group header**: Literata italic titleSmall ("noun", "verb") — the
-  only italic serif in the app.
-- **Search field**: full-pill, `surfaceContainer`, leading search icon,
-  voice input trailing.
-- **Word card** (history/favourites lists): headword (Literata titleMedium)
-  + first gloss one-liner. No card borders — tonal surface + spacing.
-- **Wikipedia card**: thumbnail right (56dp, 12dp radius), 2–3 line extract,
-  "From Wikipedia" attribution caption — matches the Page Previews contract.
-- **Notification**: BigTextStyle; title = headword · POS, body = top 1–2
-  glosses; actions `[Thesaurus] [Open] [Save]`.
-- Every interactive component ships default/pressed/focused/disabled states;
-  loading is skeleton lines (never a centered spinner on content surfaces).
+| Component | Spec |
+|---|---|
+| Entry sense block | sense number (tabular, `onSurfaceVariant`) + gloss (Inter body) + optional example (italic, `onSurfaceVariant`) + synonym chips (tertiary, max 6 shown, "+n" overflow) |
+| POS group header | Literata italic titleSmall ("noun", "verb"), the only italic serif in the app |
+| Search field | full-pill, `surfaceContainer`, leading search icon, voice input trailing |
+| Word card (history/favourites lists) | headword (Literata titleMedium) + first gloss one-liner; no card borders, tonal surface + spacing |
+| Wikipedia card | thumbnail right (56dp, 12dp radius), 2–3 line extract, "From Wikipedia" attribution caption; matches the Page Previews contract |
+| Notification | BigTextStyle; title = headword · POS, body = top 1–2 glosses; actions `[Thesaurus] [Open] [Save]` |
+
+Every interactive component ships default/pressed/focused/disabled states;
+loading is skeleton lines (never a centered spinner on content surfaces).
 
 ## Motion
 
 150–250ms, state-conveying only (M3 default easing, emphasized-decelerate on
 enters). Container transform from word card → word page; crossfade for
-in-place content swaps (thesaurus tab). No page-load choreography; honor
-system reduced-motion (animator scale) — everything degrades to crossfade.
+in-place content swaps (thesaurus tab). No page-load choreography. Honor
+system reduced-motion (animator scale); everything degrades to crossfade.

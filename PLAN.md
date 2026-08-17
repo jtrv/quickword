@@ -1,7 +1,7 @@
 # QuickWord — implementation plan
 
 *2026-07-29. Pure Kotlin + Jetpack Compose, Android-only. Supersedes the
-Flutter-shell framing in RESEARCH.md (decision refuted & confirmed — see
+Flutter-shell framing in RESEARCH.md (decision refuted & confirmed; see the
 refutation tables). Design system: PRODUCT.md + DESIGN.md.*
 
 ## Architecture
@@ -26,34 +26,41 @@ app/src/main/kotlin/dev/quickword/
 
 Key mechanics (from reference app + refutations):
 
-- **Trampoline**: exported activity, `Theme.Translucent.NoTitleBar`,
-  `noHistory`, `excludeFromRecents`, `taskAffinity=""` → query DB → post
-  notification → `finish()`. No Compose, no setContent — nothing draws.
-- **Lookup query**: exact + prefix on `words.word COLLATE NOCASE` (indexed).
-  **No FTS in MVP** (refuted — see table). Normalization: lowercase, strip
-  punctuation, fall back to stemmed retry (drop -s/-ed/-ing) before "no hit".
-- **Notification channel health** (refuted claim → requirement): on app open,
-  check `NotificationManager.getNotificationChannel("lookup").importance`;
-  if < HIGH show a banner deep-linking to channel settings. Trampoline with
-  notifications blocked falls back to launching the word page directly.
-- **Two DBs**: read-only dictionary DB (downloaded, replaceable on language
-  change) + tiny app DB (history/favourites) — avoids migrating 60MB of
-  dictionary on every app-schema change (reference app's single-DB migration
-  pain).
-- *M1 deviation:* dictionary DB is accessed via plain `android.database.sqlite`
-  (3 queries), not Room — Room's prebuilt-DB schema validation fights
-  hand-built SQLite for no benefit on a read-only store. Room reconsidered at
-  M5 for the app-owned history DB only. Dev builds bundle a 15-word fixture DB
-  as an asset; the downloader ships at M6 with the release artifact.
-- **Thesaurus action**: `showsUserInterface=false` broadcast → re-`notify()`
-  same ID with synonym content. No app launch.
+The trampoline is an exported activity (`Theme.Translucent.NoTitleBar`,
+`noHistory`, `excludeFromRecents`, `taskAffinity=""`) that queries the DB,
+posts the notification, and calls `finish()`. No Compose, no setContent;
+nothing draws.
+
+Lookup queries run exact + prefix on `words.word COLLATE NOCASE` (indexed).
+No FTS in MVP (refuted; see table). Normalization: lowercase, strip
+punctuation, fall back to stemmed retry (drop -s/-ed/-ing) before "no hit".
+
+Notification channel health (refuted claim → requirement): on app open,
+check `NotificationManager.getNotificationChannel("lookup").importance`;
+if < HIGH show a banner deep-linking to channel settings. A trampoline with
+notifications blocked falls back to launching the word page directly.
+
+Two DBs: a read-only dictionary DB (downloaded, replaceable on language
+change) plus a tiny app DB (history/favourites). This avoids migrating 60MB
+of dictionary on every app-schema change, the reference app's single-DB
+migration pain.
+
+M1 deviation: the dictionary DB is accessed via plain
+`android.database.sqlite` (3 queries) rather than Room, whose prebuilt-DB
+schema validation fights hand-built SQLite for no benefit on a read-only
+store. Room reconsidered at M5 for the app-owned history DB only. Dev builds
+bundle a 15-word fixture DB as an asset; the downloader ships at M6 with the
+release artifact.
+
+The thesaurus action is a `showsUserInterface=false` broadcast that
+re-`notify()`s the same ID with synonym content. No app launch.
 
 ## Data pipeline (`etl/`, Python, runs in CI not on device)
 
 kaikki.org English JSONL + OEWN 2024 SQLite → filter → lean SQLite
 (`words`, `senses`, `synonyms`, indexes, VACUUM) → zstd → GitHub Release
 asset. **Measured 2026-07-29 (v1 filter):** 1,446,437 words / 1,724,400
-senses / 631,509 synonyms, 280 MB raw — above the researched 120–200 MB
+senses / 631,509 synonyms, 280 MB raw, above the researched 120–200 MB
 estimate; tightening the filter (drop rare/hyphenless-variant entries) is an
 M6 packaging concern. OEWN synonym union deferred to M4. License of output:
 CC BY-SA 4.0 + attribution files.
@@ -70,13 +77,9 @@ CC BY-SA 4.0 + attribution files.
 | M5 ✅ | Wikipedia no-hit fallback (notification + in-app page, live-verified with "Nairobi"); history/favourites (recents on empty search, ★ page toggle, ★ Save notification action — tap-verified via uiautomator) | notifier/history/wiki-parse contract tests |
 | M6 ✅* | TTS (word page); affix filter (proper nouns kept per PRODUCT principle 4 — measured: names are only ~14 MB of gloss); DB release `db-en-v1` (267 MB raw / 122 MB gz) + first-run downloader (5 contract tests, verified swap-in); README + fastlane metadata | *deferred: settings screen (no toggle worth a screen yet) |
 | M7 ✅* | Store readiness. Release build type (R8 + resource shrinking, no keep rules needed — 2.2 MB APK / 4.0 MB AAB), optional keystore signing via untracked `keystore.properties`, `bundleRelease` in CI; release APK smoke-tested on emulator (PROCESS_TEXT notification, search, word page — fonts survive resource obfuscation). About screen carrying CC BY-SA attribution and the verbatim OFL texts as APK assets. `PRIVACY.md` (Play requires a policy URL), `RELEASING.md`, listing images generated from app sources by `tool/store-assets.sh` | licence compliance contract-tested (`AboutScreenTest`: entry point reachable + OFL text present in-APK); `mise run verify` green; OFL/CC assets confirmed present in the R8 release APK. *remaining is account-only: upload keystore, Play listing, F-Droid RFP |
-
 | M8 ✅ | Pre-launch functionality audit: no-hit dead end fixed (app was quieter than its own notification), TTS pinned to `Locale.ENGLISH`, TTS engine released when init outlives the screen, storage & data controls (remove the ~120 MB download, clear recents/favourites behind a confirm) | `QuickWordAppTest` mutation-tested — reinstating the fall-through to search reddens it; `mise run verify` green |
-
 | M9 ✅ | Dictionary acquisition handed to `DownloadManager`: resumes a dropped connection instead of restarting ~120 MB, refuses metered networks unless the user says otherwise (confirm dialog / "Use mobile data"), survives leaving the app, and shows a system progress notification. Gunzip + verify + atomic swap stay ours and stay tested | 6 contract tests on the install path; verified end to end on emulator 2026-08-05: download → 122 MB archive → 280 MB DB swapped in live, banner cleared, archive reclaimed; Remove download returns to starter |
-
 | M10 ✅ | Cross-model review (Codex, 12 findings) actioned: false "nothing leaves your device" claim corrected, PROCESS_TEXT input bounded, as-typed candidate added so non-ASCII headwords (`Übermensch`) stop falling through to Wikipedia, bundled-DB extraction made atomic, SQLite handles closed in the trampoline and receivers, download verification counts real rows instead of trusting `meta`, stale-download reconciliation, `PAUSED_QUEUED_FOR_WIFI` handled, TTS engine dropped when unusable, word page re-resolves after a dictionary install. Search field moved to the bottom of the screen | `mise run verify` green; bottom-bar layout verified on device with a docked keyboard |
-
 | M11a ✅ | Corpus published as release `wiki-en-top-v1` (23.8 MB gz) and the in-app download driven end to end on the emulator against the real URL | **R8 release build re-smoke-tested 2026-08-06** (M7's predates the corpus code): minified APK downloads the corpus and answers "Acrocanthosaurus" in airplane mode, no crash — minification does not touch the `WikiCorpus`/`CorpusDownloader` path |
 | M11 ✅ | Offline Wikipedia, opt-in: `etl/build_wiki.py` turns a Kiwix mini ZIM into a 37.9 MB SQLite of 49,918 lead paragraphs + 823,870 aliases (their curation, our format — 6.9× smaller than the ZIM, libzim build-time only so nothing GPL ships). Rows are raw DEFLATE against a preset dictionary stored in the file. `DictionaryDownloader` generalised to `CorpusDownloader` + `Corpus` so two data sets can coexist. Offered from About → Storage & data; tried before the network in both the app and the trampoline | 5 `WikiCorpusTest` cases (round-trip, exact-case-beats-NOCASE, alias, missing corpus, unknown title); ETL self-asserts a round-trip; **verified on device in airplane mode** — "Accenture" and "Acrocanthosaurus" answered from the corpus with no network |
 
@@ -84,19 +87,19 @@ CC BY-SA 4.0 + attribution files.
 
 - **Launcher icon is still the M0 placeholder** (`ic_launcher_foreground.xml`
   says so in its own comment). It reads fine at every size and the store assets
-  derive from it, so this is a branding decision, not a blocker.
+  derive from it, so replacing it is branding work that can wait.
 - **English only.** The dictionary, the TTS locale and the Wikipedia endpoint
   are all `en`. Multi-language means a per-language DB release, a language-aware
   TTS locale and Wikipedia host, and a picker. The picker does *not* imply a
   settings screen: the dictionary is the language, so it belongs in About's
   Storage & data section, where downloading and removing already live.
-- **No definition full-text search** — refuted at plan time (AOSP SQLite has no
+- **No definition full-text search.** Refuted at plan time (AOSP SQLite has no
   FTS5); would need `androidx.sqlite:sqlite-bundled`.
 - **No settings screen.** Theme follows the system, notifications are managed by
-  the platform's own channel UI, and storage/data now live on the About screen —
+  the platform's own channel UI, and storage/data now live on the About screen;
   there is still no toggle that earns a screen of its own.
 
-## Geiger audit (2026-07-29, direct-read mode — repo < 50 files)
+## Geiger audit (2026-07-29, direct-read mode; repo < 50 files)
 
 | Finding | Class | Evidence | Disposition |
 |---|---|---|---|
@@ -127,7 +130,7 @@ optional download.
 
 **Revision (measured, not assumed).** Per-row DEFLATE with a shared preset
 dictionary keeps rows queryable while recovering nearly all of the archive's
-density: **620 B/article vs 605 B for whole-file gzip** — a 2.5% penalty for
+density: **620 B/article vs 605 B for whole-file gzip**, a 2.5% penalty for
 staying a database. `java.util.zip.Deflater.setDictionary` is platform API, so
 this stays pure Kotlin. On-device cost becomes 0.68 GB for 875k articles,
 1.55 GB for 2M, 4.65 GB for 6M.
@@ -135,14 +138,14 @@ this stays pure Kotlin. On-device cost becomes 0.68 GB for 875k articles,
 That is the honest curve, and it is what makes the feature a real product
 decision rather than a packaging detail: meaningful proper-noun coverage costs
 1.5 GB+ on someone's phone, on top of the 280 MB dictionary. Deferred until
-there is a measured fallback hit-rate to size it against. The cheap win — a
-cache of summaries already fetched — is unaffected by any of this.
+there is a measured fallback hit-rate to size it against. The cheap win, a
+cache of summaries already fetched, is unaffected by any of this.
 
 ### Round 4 — offline Wikipedia, "their curation, our format" (2026-08-06)
 
 Proposal under test: build two opt-in corpora at build time from Kiwix mini
-ZIMs — `top` (49,981 articles, 25 MB download / 48 MB on disk) and `top1m`
-(991,894 articles, 290 MB / 412 MB) — as SQLite with per-row DEFLATE against a
+ZIMs, `top` (49,981 articles, 25 MB download / 48 MB on disk) and `top1m`
+(991,894 articles, 290 MB / 412 MB), as SQLite with per-row DEFLATE against a
 shared preset dictionary plus an alias table from Kiwix's redirects, delivered
 through the existing DownloadManager path. **Measured, not estimated:** three
 ZIMs converted, 6.4–6.9× smaller than the source archive each time.
@@ -157,9 +160,9 @@ ZIMs converted, 6.4–6.9× smaller than the source archive each time.
 | Raw DEFLATE with a preset dictionary decodes on Android, fast enough for the hot path | UNREFUTED — 3.8 µs/decode measured locally, 1.5 µs by the refuter | **Landmine found while testing:** with raw deflate `needsDictionary()` never fires, so `setDictionary()` must be called *before* `inflate()`. The documented-looking order fails with `DataFormatException: invalid distance too far back`. Also: the preset dictionary must be stored **inside** the corpus, or the file cannot decode itself. |
 | ~992k articles is sufficient coverage for the fallback's job | UNREFUTED, **weakly** — refuter found nothing measuring real dictionary-miss selections either way | Stays an open question, not a validated assumption. The honest test is the fallback hit-rate, which we do not collect and (no analytics) will not. |
 
-**Verdict:** the *format* is validated — three independent conversions, a
+**Verdict:** the *format* is validated: three independent conversions, a
 6.4–6.9× win over shipping ZIMs, fidelity confirmed against the live API on 40
-articles. The *delivery* is not: two of the four kills (downloader,
+articles. The *delivery* still has open kills: two of the four (downloader,
 disambiguation) are straightforward work, but the `top1m` supply risk is
 structural. Recommended shape: ship **`top` (25 MB)** first, snapshot the ZIM
 we built from, and treat `top1m` as a later tier taken only if Kiwix resumes
@@ -185,20 +188,20 @@ generating it.
 | kaikki+OEWN ETL ≈120–200 MB raw / 45–70 MB compressed, ~1M senses | UNREFUTED | Stands; pin real numbers in ETL assertions at M1 |
 
 Protocol notes: refuters ran `codex exec --sandbox read-only` with context
-asymmetry (claim only, never planner reasoning). Unrefuted ≠ proven —
+asymmetry (claim only, never planner reasoning). Unrefuted ≠ proven:
 agreement is not evidence; numbers get re-pinned by runnable assertions as
 soon as the thing exists.
 
 ## M0 notes (learned during scaffold, 2026-07-29)
 
 - **AGP 9 has built-in Kotlin**: `org.jetbrains.kotlin.android` must NOT be
-  applied (hard error). Bundled KGP is 2.2.10 — the
+  applied (hard error). Bundled KGP is 2.2.10, so the
   `org.jetbrains.kotlin.plugin.compose` version in libs.versions.toml is
   pinned to 2.2.10 to match; upgrade both together (buildscript-classpath
   route per AGP release notes) or not at all.
 - Toolchain: Gradle 9.6.1 wrapper (AGP 9.3.1 requires ≥9.5), Temurin 21 via
-  mise, compileSdk/targetSdk 37 (SDK package now versioned `android-37.0` —
-  minor-version scheme).
+  mise, compileSdk/targetSdk 37 (SDK package now versioned `android-37.0`,
+  a minor-version scheme).
 - ktlint (official style) and detekt disagree on max line length (140 vs
   120); aligned at 120 via `.editorconfig` `max_line_length`.
 - Lint's version-currency checks (`AndroidGradlePluginVersion`,
@@ -210,9 +213,9 @@ soon as the thing exists.
 
 ## Open questions
 
-- ~~App id~~ — resolved 2026-07-29: `io.github.jtrv.quickword` (user choice,
+- ~~App id~~ resolved 2026-07-29: `io.github.jtrv.quickword` (user choice,
   F-Droid-friendly GitHub pattern).
-- ~~Font licensing~~ — resolved at M7: Literata + Inter are OFL; the licence
+- ~~Font licensing~~ resolved at M7: Literata + Inter are OFL; the licence
   texts ship as APK assets (`app/src/main/assets/licenses/`) and render verbatim
   on the About screen, alongside the CC BY-SA attribution the dictionary data
   requires. Both are contract-tested, not documented-and-hoped.

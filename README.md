@@ -12,18 +12,18 @@ rebuilt in Kotlin + Jetpack Compose with modern Wiktionary data.
   a heads-up notification with the definition and `[Thesaurus] [Open] [Save]`
   actions. The Thesaurus button swaps the notification to synonyms in place.
 - No dictionary hit? The word is looked up on **Wikipedia** (proper nouns,
-  places, people) — with attribution.
+  places, people), with attribution.
 - The app itself: serif-typeset word pages (Literata), prefix search,
   recents & favourites, pronunciation via TTS.
 
 ## Data
 
 - Definitions/synonyms: [kaikki.org](https://kaikki.org) wiktextract of the
-  English Wiktionary — **CC BY-SA 4.0**. 1.4M words, built by
+  English Wiktionary (**CC BY-SA 4.0**). 1.4M words, built by
   [`etl/build_db.py`](etl/build_db.py), shipped as a
   [GitHub Release](../../releases) the app downloads on first run
   (a small starter dictionary is bundled).
-- Wikipedia summaries: Wikimedia REST API, CC BY-SA. Optionally offline — an
+- Wikipedia summaries: Wikimedia REST API, CC BY-SA. Optionally offline: an
   opt-in 38 MB corpus of the top 50,000 article lead paragraphs, built from a
   [Kiwix](https://kiwix.org) mini ZIM by [`etl/build_wiki.py`](etl/build_wiki.py).
   Kiwix has already solved which articles matter and how to get a clean lead out
@@ -45,8 +45,8 @@ mise run store-assets   # regenerate listing images in fastlane/metadata
 
 Release builds are debug-signed unless an untracked `keystore.properties` sits
 at the repo root, so `assembleRelease` works for anyone and only uploads need
-the real key. Publishing steps — signing, Play data-safety answers, F-Droid
-submission — are in [RELEASING.md](RELEASING.md); privacy in
+the real key. Publishing steps (signing, Play data-safety answers, F-Droid
+submission) are in [RELEASING.md](RELEASING.md); privacy in
 [PRIVACY.md](PRIVACY.md).
 
 Android SDK: platform 37. See `PLAN.md` for architecture (and its

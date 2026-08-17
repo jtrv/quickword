@@ -1,1 +1,1 @@
-Select a word anywhere — get its definition as a notification. Offline.
+Select a word anywhere, get its definition as a notification. Offline.

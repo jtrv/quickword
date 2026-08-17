@@ -1,6 +1,6 @@
 QuickWord answers "what does this word mean" with the least possible
 interruption: select a word in any app, tap QuickWord in the text-selection
-menu, and the definition appears as a notification — no app switch, and it
+menu, and the definition appears as a notification. No app switch, and it
 works offline.
 
 Features:
@@ -16,4 +16,4 @@ Features:
 
 The full dictionary (~120 MB) is downloaded once on first run; a small
 starter dictionary is bundled so the app works immediately. The offline
-Wikipedia pack (38 MB) is optional — get it from About → Storage & data.
+Wikipedia pack (38 MB) is optional; get it from About → Storage & data.

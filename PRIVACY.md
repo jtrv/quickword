@@ -25,10 +25,10 @@ explicitly excluded from backup.
 
 QuickWord contacts exactly three kinds of destination, and none of them is ours:
 
-1. **github.com** — once, when you tap *Download* to fetch the full dictionary.
-   GitHub sees your IP address and that the file was downloaded. No word you
-   looked up is involved.
-2. **wikipedia.org** (Wikimedia REST API) — only when a word has *no* dictionary
+1. **github.com** is contacted once, when you tap *Download* to fetch the full
+   dictionary. GitHub sees your IP address and that the file was downloaded. No
+   word you looked up is involved.
+2. **wikipedia.org** (Wikimedia REST API) is contacted only when a word has *no* dictionary
    entry, so that names and places still resolve. In that case the word is sent
    to Wikimedia, which sees it along with your IP address, under the
    [Wikimedia privacy policy](https://foundation.wikimedia.org/wiki/Policy:Privacy_policy).
@@ -42,8 +42,8 @@ QuickWord contacts exactly three kinds of destination, and none of them is ours:
 
 ## Permissions
 
-- `INTERNET` — for the two cases above.
-- `POST_NOTIFICATIONS` — to show the definition, which is the whole point of the
+- `INTERNET`, for the two cases above.
+- `POST_NOTIFICATIONS`, to show the definition, which is the whole point of the
   app. Notifications are built and shown on the device.
 
 ## Children
