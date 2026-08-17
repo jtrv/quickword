@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        // Deep-link target for the notification's Open action (M2).
+        // Deep-link target for the notification's Open action.
         const val EXTRA_WORD = io.github.jtrv.quickword.lookup.EXTRA_WORD
     }
 }

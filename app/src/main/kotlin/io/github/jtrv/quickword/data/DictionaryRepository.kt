@@ -28,7 +28,8 @@ data class Suggestion(
 
 /**
  * Read-only access to the prebuilt dictionary DB (schema: etl/build_db.py).
- * Plain SQLite by design — see PLAN.md M1 deviation note.
+ * Plain SQLite, not Room: Room's prebuilt-DB schema validation fights
+ * hand-built SQLite for no benefit on a read-only store.
  */
 class DictionaryRepository(
     private val context: Context,

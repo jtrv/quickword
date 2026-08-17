@@ -9,7 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
- * The notification's Thesaurus button (M4): swaps the notification content to
+ * The notification's Thesaurus button: swaps the notification content to
  * synonyms in place — no app launch, no UI. goAsync() keeps the process alive
  * for the DB read.
  */

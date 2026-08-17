@@ -6,7 +6,6 @@ package io.github.jtrv.quickword.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Light scheme
 val LightPrimary = Color(0xFF802D7C)
 val LightOnPrimary = Color(0xFFFFFFFF)
 val LightPrimaryContainer = Color(0xFFF3D7F0)
@@ -24,7 +23,6 @@ val LightOnSurfaceVariant = Color(0xFF4E444D)
 val LightOutline = Color(0xFF877C86)
 val LightError = Color(0xFFB32322)
 
-// Dark scheme
 val DarkPrimary = Color(0xFFDF9ED9)
 val DarkOnPrimary = Color(0xFF460544)
 val DarkPrimaryContainer = Color(0xFF5E1F5A)

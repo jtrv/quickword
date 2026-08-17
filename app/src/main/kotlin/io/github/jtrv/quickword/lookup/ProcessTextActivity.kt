@@ -12,7 +12,7 @@ import io.github.jtrv.quickword.data.WikipediaApi
 import kotlinx.coroutines.launch
 
 /**
- * The trampoline (PLAN.md M2): translucent, never draws, posts the definition
+ * The trampoline: translucent, never draws, posts the definition
  * notification and finishes. Manifest gives it the PROCESS_TEXT + SEND
  * filters, a translucent theme, noHistory and excludeFromRecents — the host
  * app stays on screen throughout.

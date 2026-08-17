@@ -179,7 +179,6 @@ class CorpusDownloader(
     /** Bytes on disk, 0 when this corpus is not installed. */
     val installedBytes: Long get() = installedFile.length()
 
-    /** Reclaim the download. */
     fun removeInstalled(): Boolean = installedFile.delete()
 
     private fun downloadedFile(id: Long): File? =
