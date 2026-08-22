@@ -82,6 +82,92 @@ CC BY-SA 4.0 + attribution files.
 | M10 ✅ | Cross-model review (Codex, 12 findings) actioned: false "nothing leaves your device" claim corrected, PROCESS_TEXT input bounded, as-typed candidate added so non-ASCII headwords (`Übermensch`) stop falling through to Wikipedia, bundled-DB extraction made atomic, SQLite handles closed in the trampoline and receivers, download verification counts real rows instead of trusting `meta`, stale-download reconciliation, `PAUSED_QUEUED_FOR_WIFI` handled, TTS engine dropped when unusable, word page re-resolves after a dictionary install. Search field moved to the bottom of the screen | `mise run verify` green; bottom-bar layout verified on device with a docked keyboard |
 | M11a ✅ | Corpus published as release `wiki-en-top-v1` (23.8 MB gz) and the in-app download driven end to end on the emulator against the real URL | **R8 release build re-smoke-tested 2026-08-06** (M7's predates the corpus code): minified APK downloads the corpus and answers "Acrocanthosaurus" in airplane mode, no crash — minification does not touch the `WikiCorpus`/`CorpusDownloader` path |
 | M11 ✅ | Offline Wikipedia, opt-in: `etl/build_wiki.py` turns a Kiwix mini ZIM into a 37.9 MB SQLite of 49,918 lead paragraphs + 823,870 aliases (their curation, our format — 6.9× smaller than the ZIM, libzim build-time only so nothing GPL ships). Rows are raw DEFLATE against a preset dictionary stored in the file. `DictionaryDownloader` generalised to `CorpusDownloader` + `Corpus` so two data sets can coexist. Offered from About → Storage & data; tried before the network in both the app and the trampoline | 5 `WikiCorpusTest` cases (round-trip, exact-case-beats-NOCASE, alias, missing corpus, unknown title); ETL self-asserts a round-trip; **verified on device in airplane mode** — "Accenture" and "Acrocanthosaurus" answered from the corpus with no network |
+| M12 ⏳ | **Proposed, unrefuted:** near-miss lookup — "maybe: …" when a word or phrase has no hit anywhere. Design and open claims in the M12 section below; Round 5 refutation table filed but not yet run | not started |
+
+## M12 (proposed, not yet refuted) — near-miss lookup ("maybe: …")
+
+**Nothing like this exists today.** `lookupCandidates` yields at most four
+*exact* candidates (phrase, phrase lowercased, first word, first word
+lowercased); `DictionaryRepository.lookup` returns the first exact hit;
+`entriesFor` matches `word = ? COLLATE NOCASE`. A miss falls through to
+Wikipedia and then to "No entry for X". The search screen offers prefix
+completions only (`word LIKE 'q%'`), which by construction cannot help once
+the *first* letters are wrong: "recieve" completes to nothing. A misspelling
+is a dead end on every surface, and the only response the app has is
+`no_entry_hint` telling the user to check the spelling themselves.
+
+### Shape
+
+One new read path — `DictionaryRepository.nearMisses(query, limit)` returning
+ranked `Suggestion`s — plus a pure-Kotlin distance function. Three callers:
+the trampoline (`ProcessTextActivity.lookUp`), the search screen's empty
+state, and `LookupResult.None` on the word screen.
+
+**Pool.** The only usable index is `idx_words_word ON words(word COLLATE
+NOCASE)`, so the pool must come from range scans on the headword itself. A
+one-letter prefix scan is a six-figure row scan on a 1.45M-row table and is
+not affordable on the hot path; a four-letter prefix is cheap but misses
+exactly the case that matters (a typo inside the first four letters). So:
+generate a small set of *prefix variants* of the query's first k letters
+(k≈4 — identity, single deletions, single transpositions, and first-position
+substitutions from a confusion set: c/s/k, i/e, a/e, y/i, f/ph, doubled
+letters), run one indexed range scan per variant with a length band
+(`LENGTH(word) BETWEEN n-2 AND n+2`) and a per-variant row cap, and union the
+result. Each variant is a b-tree seek plus a short scan; the cost that matters
+is rows returned, not seeks. **k, the variant classes and the caps are
+parameters to be tuned against the real 280 MB DB, not guessed** — the
+benchmark is part of the gate below, not a follow-up.
+
+**Ranking.** Bounded Damerau–Levenshtein (optimal string alignment) with early
+abandon, max distance 1 for words ≤4 letters, 2 for ≤8, 3 above; anything over
+threshold is dropped rather than shown. We have no frequency column, so the
+tie-break is sense count (a rough commonness proxy, joined only for the ~20
+finalists) then length. The proper fix — a `rank` column from the ETL — is
+deliberately deferred: it costs a new DB release, and shipping it that way
+would deny the feature to everyone on `db-en-v1` until they re-download
+122 MB.
+
+**Precedence.** dictionary exact → Wikipedia (offline corpus, then network) →
+near-miss → no-entry. Wikipedia stays ahead of the matcher because a real
+proper noun that the dictionary lacks must never be silently "corrected" into
+an unrelated common word; near-miss is the last resort before giving up. On
+the trampoline the DB work can run concurrently with the Wikipedia leg, which
+already awaits a network round trip today, so the added wall-clock in the miss
+path is bounded by the query, not the sum.
+
+**Surfaces.** Notification: a distinct near-miss post whose headword and
+[Open] target are the *corrected* word, and whose body says plainly what was
+selected and that this is a guess. Search: a "Did you mean" section in place
+of the bare "No entry for X". Word screen: near-miss chips on the `None`
+state, reusing the synonym-chip component. Exact copy is a DESIGN.md decision
+at implementation time; the invariant is that a near-miss is never rendered
+as the definition of what the user actually selected.
+
+**Guards.** Single-token candidates only (phrase-level fuzzing multiplies the
+pool for no realistic gain); length 3–24; skip when the query is non-Latin,
+since NOCASE folds ASCII only; hard row cap with abandon. The path runs only
+after a confirmed miss, so ordinary lookups pay nothing. Quality scales with
+the installed corpus — against the bundled starter DB there is nothing to
+match, which is harmless.
+
+### What it is not
+
+Not full-text search over definitions (refuted at Round 2: AOSP SQLite has no
+FTS5). Not `spellfix1` — not compiled into the framework SQLite either, and
+bundling a native SQLite for this would undo the pure-Kotlin decision. Not a
+SymSpell delete-index, whose row count over 1.45M headwords is its own
+packaging problem. All three require touching the shipped DB or the SQLite
+binary; this design touches neither.
+
+### Gate
+
+Unit tests for the distance function and the variant generator
+(mutation-tested, per the standing loop); a repository test on the fixture DB; a
+notifier contract test pinning the near-miss wording and the [Open] target; a
+`QuickWordAppTest` case for the search empty state; a recorded p50/p95
+benchmark of `nearMisses` against the real 280 MB DB on a device (not the
+emulator, and not a synthetic table); `mise run verify` green; device
+verification of the select-text path on a genuinely misspelled selection.
 
 ## Known gaps at launch (deliberate, not forgotten)
 
@@ -93,6 +179,9 @@ CC BY-SA 4.0 + attribution files.
   TTS locale and Wikipedia host, and a picker. The picker does *not* imply a
   settings screen: the dictionary is the language, so it belongs in About's
   Storage & data section, where downloading and removing already live.
+- **No misspelling tolerance.** Every lookup path is exact-match; a typo or a
+  misspelling reaches "No entry for X" with no suggestion, on all three
+  surfaces. M12 above proposes the fix and is not yet refuted.
 - **No definition full-text search.** Refuted at plan time (AOSP SQLite has no
   FTS5); would need `androidx.sqlite:sqlite-bundled`.
 - **No settings screen.** Theme follows the system, notifications are managed by
@@ -167,6 +256,35 @@ disambiguation) are straightforward work, but the `top1m` supply risk is
 structural. Recommended shape: ship **`top` (25 MB)** first, snapshot the ZIM
 we built from, and treat `top1m` as a later tier taken only if Kiwix resumes
 generating it.
+
+### Round 5 — near-miss lookup (2026-08-22) — **claims filed, refuters NOT yet run**
+
+Proposal under test: the M12 section above — app-side Damerau–Levenshtein over
+a pool drawn from prefix-variant range scans on the existing
+`idx_words_word`, no schema change, surfaced as "maybe: …" on all three
+no-hit surfaces.
+
+Verdicts are **PENDING**: this table was written in an environment without the
+`codex` CLI, so no refuter has seen a claim yet. Per the protocol each claim
+goes to `codex exec --sandbox read-only` with the claim only, never the
+planner's reasoning, and every number below is an assumption until an
+assertion pins it. **A plan with a PENDING table is not a plan that may be
+implemented.**
+
+| Claim | Verdict | Notes for the refuter |
+|---|---|---|
+| Prefix-variant fan-out over `idx_words_word` answers within the trampoline's latency budget on the real 1,446,437-row DB | PENDING — **unmeasured**, and the fixture DB has 15 words so it cannot be measured here | The whole design rests on this. Attack the row counts: how many headwords share a 3- or 4-letter prefix in the fat regions ("con", "over", "un"), and what does the length band actually remove? |
+| A one-letter prefix scan is unaffordable, which is why the variants exist | PENDING | If a bounded single-letter scan with early abandon is in fact fast enough, the entire variant generator is unnecessary complexity. |
+| `word >= ? AND word < ?` uses the NOCASE index only when the comparison collation matches, and NOCASE folds ASCII only | PENDING | Same class as the M10 finding that sent `Übermensch` to Wikipedia. If true, non-ASCII headwords are outside the pool by construction and the guard must say so honestly. |
+| `LENGTH(word) BETWEEN ?` filters scanned rows without defeating the index | PENDING | Cheap to settle with `EXPLAIN QUERY PLAN`; settle it before building anything. |
+| Damerau–Levenshtein ≤2 covers most misspellings a dictionary user would hit | PENDING | The classic single-error figure describes *typing* slips. Cognitive misspellings ("definately", "recieve") are the actual population here. |
+| One matcher fits both surfaces | PENDING | The error models differ: text arriving via PROCESS_TEXT carries the *author's* or an OCR pass's errors, while the search field carries the user's own thumbs. Keyboard-adjacency substitutions, in particular, are justified on one surface and not the other. |
+| Ranking by distance + sense count avoids embarrassing suggestions without a frequency column | PENDING | The failure mode is offering an obscure headword for a common typo. If this is refuted, the feature needs `db-en-v2` with a rank column and the no-re-download argument collapses. |
+| Wikipedia before near-miss is the right precedence | PENDING | Protects proper nouns from being corrected into unrelated words; costs the user a network round trip before seeing a guess. Argue the inverse. |
+| Restricting to single tokens loses nothing real | PENDING | Full-phrase-first is a user policy (2026-07-29); a misspelled word inside a selected phrase would still be caught via the first-word candidate, but only the first word. |
+| Deferring the ETL rank column keeps `db-en-v1` users whole | PENDING | The alternative is a 122 MB re-download for a spelling feature. |
+| "maybe:" copy can never be read as an assertion about the selected word | PENDING | Product risk, not a technical one, and the notification is the product (PRODUCT.md principle 1). A wrong guess presented confidently is worse than "No entry for X". |
+| `spellfix1`, FTS5 and a SymSpell delete-index are each unavailable or unaffordable here | PENDING | FTS5 was already refuted at Round 2 for AOSP. Confirm `spellfix1` is absent from the framework SQLite rather than assuming it, and put a row count on the delete-index. |
 
 ### Round 1 & 2 (plan-refute protocol, codex-cli 0.144.6 cross-model)
 
