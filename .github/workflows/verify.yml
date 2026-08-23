@@ -18,6 +18,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@v5
       # Android SDK, python3, sqlite3 are preinstalled on ubuntu-latest.
       - run: tool/verify.sh
-      # R8/resource-shrinking breakage never shows up in unit tests. Debug-signed
+      # R8/resource-shrinking breakage never shows up in unit tests. Unsigned
       # here (no keystore.properties in CI) — this proves it builds, not that it ships.
       - run: ./gradlew --console=plain bundleRelease

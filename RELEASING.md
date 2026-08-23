@@ -9,19 +9,27 @@ script.
 `versionCode` must increase on every upload and never be reused; `versionName`
 is what users see. Both live in `app/build.gradle.kts`.
 
-**1.0.0 (`versionCode` 1) is already cut and tagged `v1.0.0`**; it is what goes
-to Play and F-Droid first. The steps below are for the release *after* it, so
-substitute the new version throughout:
+**1.0.1 (`versionCode` 2) is the current release, tagged `v1.0.1`.** The steps
+below are for the release *after* it, so substitute the new version throughout:
 
 ```sh
 # bump versionCode/versionName, add fastlane/metadata/android/en-US/changelogs/<versionCode>.txt
 mise run verify
-git commit -am "release: 1.0.1"
-git tag -a v1.0.1 -m "QuickWord 1.0.1" && git push --follow-tags
+git commit -am "release: 1.0.2"
+git tag -a v1.0.2 -m "QuickWord 1.0.2" && git push --follow-tags
+mise run release:apk v1.0.2          # → dist/quickword-1.0.2.apk, verified reproducible
+gh release create v1.0.2 dist/quickword-1.0.2.apk --title "QuickWord 1.0.2" \
+  --notes-file fastlane/metadata/android/en-US/changelogs/<versionCode>.txt
 ```
 
 The tag matters beyond bookkeeping: F-Droid's update checker watches tags, so a
-release without one is a release F-Droid will never see.
+release without one is a release F-Droid will never see. The APK matters just as
+much: F-Droid downloads `quickword-<version>.apk` from the GitHub release and
+publishes it only if its own build of the tagged commit is byte-identical, so
+always build it with `mise run release:apk` (clean checkout of the tag, never
+the working tree) and attach it right after pushing the tag. 1.0.0 was built
+from a later commit than its tag and can never be published by F-Droid, which is
+why 1.0.1 exists.
 
 ## 2. Upload keystore (once, ever)
 
@@ -41,8 +49,10 @@ keyPassword=…
 
 **Back the `.jks` up somewhere you will still have in five years.** Play Signing
 means Google holds the *app* signing key, so a lost upload key is recoverable
-via support. F-Droid, though, publishes under its own key with no such escape
-hatch, and losing a key there means the app can never be updated in place.
+via support. The GitHub and F-Droid builds, though, are signed with this key
+directly (F-Droid reproduces the build and republishes the signed APK; its
+recipe pins the certificate), and losing it means neither can ever update in
+place again.
 
 Verify the build picked the real key up rather than the debug fallback:
 
@@ -113,26 +123,34 @@ dictionary does).
 ## 4. F-Droid
 
 QuickWord ships on both stores, with Play as the primary channel. F-Droid
-review takes weeks and should run in parallel rather than gate the launch.
+publishes the **same signed APK as the GitHub release**, after rebuilding the
+tagged commit on its own infrastructure and checking the result is
+byte-identical ([reproducible builds](https://f-droid.org/docs/Reproducible_Builds/)).
+So F-Droid and GitHub installs update across each other; only Play, which
+re-signs with Google's key, needs a reinstall to switch.
 
-F-Droid builds from source on their own infrastructure and signs with their own
-key, so **the F-Droid build and the Play build are not interchangeable**: a
-user cannot update from one to the other without uninstalling. That is a
-property of publishing to both, not a problem to solve; it only needs saying out
-loud if a user ever asks why switching stores wants a reinstall.
+The recipe lives in [fdroiddata `metadata/io.github.jtrv.quickword.yml`](https://gitlab.com/fdroid/fdroiddata/-/blob/master/metadata/io.github.jtrv.quickword.yml)
+(first submitted as [RFP #4275](https://gitlab.com/fdroid/rfp/-/issues/4275)
+and [MR !46415](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46415)).
+`AutoUpdateMode: Version` means every `vX.Y.Z` tag gets picked up by their bot
+without a manual MR; `Binaries:` points at
+`github.com/jtrv/quickword/releases/download/v%v/quickword-%v.apk`, and
+`AllowedAPKSigningKeys` pins the `CN=QuickWord` certificate. Nothing in this
+repo needs touching per release beyond step 1.
 
-1. Open a request at [gitlab.com/fdroid/rfp](https://gitlab.com/fdroid/rfp/-/issues)
-   with the repo URL and the tag from step 1. Ask for `Donate: https://ko-fi.com/jtrvs`
-   in the metadata; F-Droid renders a donate button from that field, and it is
-   easier to include up front than to add later.
-2. They will write a build recipe in `fdroiddata`. Nothing in this repo blocks
-   it: dependencies are androidx/Compose only, the build needs no proprietary
-   SDK, and `fastlane/metadata/` is already in the layout their bot reads.
-3. Expect a question about `assets/dictionary/quickword-en.db`. It is a small
-   fixture generated from public data by `etl/build_db.py`; the full dictionary
-   is downloaded at runtime from a GitHub release, which is fine for F-Droid
-   (free content, free host) but should be described in the RFP rather than
-   discovered by a reviewer.
+Things that would break it:
+
+- Building the release APK from anything other than a clean checkout of the
+  tagged commit (`mise run release:apk` exists so this cannot happen by
+  accident). Even `META-INF/version-control-info.textproto` embeds the commit.
+- Renaming the release asset, or changing the signing key.
+- Anything that makes the build nondeterministic — verify with
+  `mise run release:apk`, which compares a signed and an unsigned build of the
+  tag with `apksigcopier` the same way `fdroid publish` will.
+- `app/src/main/assets/dictionary/quickword-en.db` is a small fixture generated
+  from public data by `etl/build_db.py`; the full dictionary is downloaded at
+  runtime from a GitHub release (free content, free host). Keep it that way or
+  expect a question from a reviewer.
 
 ## What CI already guarantees
 

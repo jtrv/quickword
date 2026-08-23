@@ -9,3 +9,4 @@ mise.local.toml
 keystore.properties
 *.jks
 *.keystore
+dist/

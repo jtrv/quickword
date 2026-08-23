@@ -8,8 +8,8 @@ plugins {
 }
 
 // Real signing only if keystore.properties exists (untracked, per-machine).
-// Without it `assembleRelease` still builds — debug-signed, installable, not
-// uploadable. Keeps CI and contributors unblocked without a shared secret.
+// Without it `assembleRelease` still builds, unsigned — the same bytes F-Droid
+// builds and then verifies against the signed release (tool/release-apk.sh).
 val keystoreProps =
     rootProject.file("keystore.properties").takeIf { it.exists() }?.let { file ->
         Properties().apply { file.inputStream().use(::load) }
@@ -23,8 +23,8 @@ android {
         applicationId = "io.github.jtrv.quickword"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
     }
 
     buildFeatures {
@@ -48,12 +48,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig =
-                if (keystoreProps != null) {
-                    signingConfigs.getByName("release")
-                } else {
-                    signingConfigs.getByName("debug")
-                }
+            signingConfig = if (keystoreProps != null) signingConfigs.getByName("release") else null
         }
     }
 

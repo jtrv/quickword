@@ -1,0 +1,3 @@
+Reproducible builds: F-Droid now publishes the same APK as the GitHub
+release, signed with the QuickWord key, so installs can move between the two
+without a reinstall.

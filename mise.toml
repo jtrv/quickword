@@ -26,6 +26,10 @@ run = "./gradlew --console=plain assembleDebug"
 description = "Release APK (R8-minified; real signing only if keystore.properties exists)"
 run = "./gradlew --console=plain assembleRelease"
 
+[tasks."release:apk"]
+description = "Signed release APK for a tag, built from a clean checkout and verified reproducible → dist/"
+run = "tool/release-apk.sh"
+
 [tasks.bundle]
 description = "Play upload AAB → app/build/outputs/bundle/release/app-release.aab"
 run = "./gradlew --console=plain bundleRelease"
