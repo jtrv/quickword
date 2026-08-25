@@ -1,0 +1,2 @@
+Removes the Google-encrypted dependency-metadata blob from the APK, which
+F-Droid does not allow. No user-visible changes.

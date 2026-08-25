@@ -23,8 +23,16 @@ android {
         applicationId = "io.github.jtrv.quickword"
         minSdk = 26
         targetSdk = 37
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.0.2"
+    }
+
+    // AGP puts a Google-encrypted dependency blob in the signing block; F-Droid
+    // rejects APKs containing it (fdroid/admin#367). The AAB keeps it so Play
+    // can still flag vulnerable SDKs — Play is the only consumer of that copy.
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = true
     }
 
     buildFeatures {
