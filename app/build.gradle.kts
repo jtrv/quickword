@@ -9,7 +9,7 @@ plugins {
 
 // Real signing only if keystore.properties exists (untracked, per-machine).
 // Without it `assembleRelease` still builds, unsigned — the same bytes F-Droid
-// builds and then verifies against the signed release (tool/release-apk.sh).
+// builds and then verifies against the signed release (mise run release:apk).
 val keystoreProps =
     rootProject.file("keystore.properties").takeIf { it.exists() }?.let { file ->
         Properties().apply { file.inputStream().use(::load) }

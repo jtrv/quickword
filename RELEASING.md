@@ -154,7 +154,7 @@ Things that would break it:
 
 ## What CI already guarantees
 
-`tool/verify.sh` plus the `bundleRelease` step in `.github/workflows/verify.yml`
+`mise run verify` plus the `bundleRelease` step in `.github/workflows/verify.yml`
 mean an unbuildable release, an R8 regression, a palette that drifted from
 `DESIGN.md`, or a dictionary schema that drifted from the ETL cannot reach a
 tag. The gate is the same script locally and in CI, so "works on my machine"

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
+#MISE description="The whole gate: format/lint/test across all Gradle builds (see kotlin-verify-loop skill)"
 # The whole gate. One command, cargo/clippy-style: format -> analyze/lint -> test,
 # across every Dart workspace package and every Gradle build in the repo.
 # Exit non-zero on any failure; print a findable summary, not a wall of logs.
 set -u
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="${MISE_PROJECT_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 cd "$REPO_ROOT"
 
 FAILURES=()
@@ -101,7 +102,8 @@ done
 
 # --- Cross-language contracts (geiger findings g1+g2, refuted & confirmed) ----
 # g2: DESIGN.md / Color.kt / palette.py three-way mirror
-[ -f tool/palette.py ] && run_step "palette + Color.kt mirror" python3 tool/palette.py
+palette=.config/mise/tasks/palette.py
+[ -f "$palette" ] && run_step "palette + Color.kt mirror" python3 "$palette"
 # g1: ETL schema <-> app queries via the checked-in fixture asset. Rebuild the
 # fixture from sample.jsonl with the CURRENT ETL and logical-diff it against
 # the asset — a schema change in build_db.py without a regenerated asset is red.

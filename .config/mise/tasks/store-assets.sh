@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
+#MISE description="Regenerate F-Droid/Play listing images into fastlane/metadata (icon, feature graphic, screenshots)"
 # Regenerate the store listing images that F-Droid and Play both read from
 # fastlane/metadata/. Derived from the same sources as the app itself — the
 # adaptive-icon geometry, the brand purple, the bundled fonts, and the
 # Roborazzi shots — so the listing cannot drift from what ships.
 #
-#   ./tool/store-assets.sh   (or: mise run store-assets)
+#   mise run store-assets
 #
 # Needs rsvg-convert (librsvg) and magick (ImageMagick 7).
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "${MISE_PROJECT_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 
 out=fastlane/metadata/android/en-US/images
 tmp=$(mktemp -d)

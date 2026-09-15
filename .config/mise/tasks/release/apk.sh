@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
+#MISE description="Signed release APK for a tag, built from a clean checkout and verified reproducible → dist/"
 # Build the release APK for a tag from a clean checkout, then prove it is the
 # same build F-Droid will make: an unsigned build of the same commit must verify
 # with the signed APK's signature copied onto it (what `fdroid publish` does).
-# Usage: tool/release-apk.sh v1.0.1   → dist/quickword-1.0.1.apk
+# Usage: mise run release:apk v1.0.1   → dist/quickword-1.0.1.apk
 set -euo pipefail
 
-tag=${1:?usage: tool/release-apk.sh <tag>}
+tag=${1:?usage: mise run release:apk <tag>}
 root=$(git rev-parse --show-toplevel)
 work="$root/build/release-$tag"
 rm -rf "$work" && mkdir -p "$work"

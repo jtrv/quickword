@@ -14,7 +14,7 @@ palette; **no Material You dynamic color** (user decision 2026-07-29:
 identity and testability over wallpaper-matching).
 
 All values authored in OKLCH, shipped as sRGB hex. Every text/bg pair below
-verified ≥ 4.5:1 (WCAG AA) by `tool/palette.py`; re-run it whenever a token
+verified ≥ 4.5:1 (WCAG AA) by `mise run palette`; re-run it whenever a token
 changes. Lowest passing pair today is 7.34:1.
 
 ### Light scheme (M3 ColorScheme roles)

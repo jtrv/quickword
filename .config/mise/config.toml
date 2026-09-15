@@ -10,14 +10,6 @@ uv = "latest"
 #   mise use android-sdk@latest   (vfox plugin, per refutation table in PLAN.md)
 # JAVA_HOME is exported automatically by mise's java tool.
 
-[tasks.verify]
-description = "The whole gate: format/lint/test across all Gradle builds (see kotlin-verify-loop skill)"
-run = "tool/verify.sh"
-
-[tasks.palette]
-description = "Recompute DESIGN.md palette hex values + WCAG contrast checks"
-run = "python3 tool/palette.py"
-
 [tasks.build]
 description = "Debug APK"
 run = "./gradlew --console=plain assembleDebug"
@@ -26,17 +18,9 @@ run = "./gradlew --console=plain assembleDebug"
 description = "Release APK (R8-minified; real signing only if keystore.properties exists)"
 run = "./gradlew --console=plain assembleRelease"
 
-[tasks."release:apk"]
-description = "Signed release APK for a tag, built from a clean checkout and verified reproducible → dist/"
-run = "tool/release-apk.sh"
-
 [tasks.bundle]
 description = "Play upload AAB → app/build/outputs/bundle/release/app-release.aab"
 run = "./gradlew --console=plain bundleRelease"
-
-[tasks."store-assets"]
-description = "Regenerate F-Droid/Play listing images into fastlane/metadata (icon, feature graphic, screenshots)"
-run = "tool/store-assets.sh"
 
 [tasks.install]
 description = "Build + install debug APK on connected device"

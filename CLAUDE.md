@@ -9,11 +9,11 @@ text anywhere → definition as notification). Android-only.
   by PLAN.md).
 - `reference/NotificationDictionary/`: read-only prior art; never edit, lint,
   or build it.
-- Toolchain/tasks: `mise.toml` (`mise run verify|build|test|lint|shots|palette`).
+- Toolchain/tasks: `.config/mise/config.toml` (`mise run verify|build|test|lint|shots|palette`).
 
 ## Standing workflow (non-negotiable)
 
-- **Verify gate:** `tool/verify.sh` is the whole gate; run it before every
+- **Verify gate:** `mise run verify` is the whole gate; run it before every
   commit, and run the narrow steps (format/analyze/touched tests) after every
   edit.
   Discipline details: user-global `kotlin-verify-loop` skill (and

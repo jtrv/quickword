@@ -11,13 +11,19 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
+      # mise is here only to run tasks; java/gradle still come from the
+      # setup-* actions below (they cache), so install: false keeps [tools]
+      # from installing a second copy of both.
+      - uses: jdx/mise-action@v3
+        with:
+          install: false
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v5
       # Android SDK, python3, sqlite3 are preinstalled on ubuntu-latest.
-      - run: tool/verify.sh
+      - run: mise run verify
       # R8/resource-shrinking breakage never shows up in unit tests. Unsigned
       # here (no keystore.properties in CI) — this proves it builds, not that it ships.
       - run: ./gradlew --console=plain bundleRelease

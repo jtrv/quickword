@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#MISE description="Recompute DESIGN.md palette hex values + WCAG contrast checks"
 """OKLCH -> sRGB hex + WCAG contrast for the QuickWord M3 palette."""
 import math
 
@@ -93,8 +94,9 @@ for name, (L, C, H) in ROLES.items():
 
 def check_kotlin(rgb):
     """Geiger fix g2: fail when ui/theme/Color.kt drifts from this palette."""
-    import re, pathlib
-    src = pathlib.Path(__file__).parent.parent / "app/src/main/kotlin/io/github/jtrv/quickword/ui/theme/Color.kt"
+    import os, re, pathlib
+    root = pathlib.Path(os.environ.get("MISE_PROJECT_ROOT") or pathlib.Path(__file__).parents[3])
+    src = root / "app/src/main/kotlin/io/github/jtrv/quickword/ui/theme/Color.kt"
     kotlin = {}
     for m in re.finditer(r"val (Light|Dark)(\w+) = Color\(0xFF([0-9A-F]{6})\)", src.read_text()):
         prefix = "L." if m.group(1) == "Light" else "D."
