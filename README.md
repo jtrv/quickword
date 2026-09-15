@@ -6,6 +6,10 @@ No app switch, works offline, back to reading in five seconds.
 Successor in spirit to [NotificationDictionary](https://github.com/tirkarthi/NotificationDictionary),
 rebuilt in Kotlin + Jetpack Compose with modern Wiktionary data.
 
+| | | |
+|---|---|---|
+| ![definition notification for petrichor with Thesaurus, Open and Save actions](fastlane/metadata/android/en-US/images/phoneScreenshots/1.png) | ![the same notification swapped to synonyms in place](fastlane/metadata/android/en-US/images/phoneScreenshots/2.png) | ![serif-typeset word page with IPA, senses and synonym chips](fastlane/metadata/android/en-US/images/phoneScreenshots/3.png) |
+
 ## How it works
 
 - Select text in any app → **QuickWord** in the selection menu (or Share) →
