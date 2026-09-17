@@ -42,8 +42,14 @@ Cut **v1.0.3** carrying both fixes from the device review:
    banner. Reword to match what ships; the metered-network confirm dialog is
    better than the current text promises, so describe it.
 2. **`android:allowBackup` defaults to true**, so `databases/history.db`
-   (recents and favourites) goes to cloud backup. Set it false, or add a
-   backup rule excluding that database, and say which in `PRIVACY.md`.
+   (recents and favourites) goes to cloud backup. `PRIVACY.md` already
+   discloses this accurately, so it is a decision rather than a bug: exclude
+   the database (manifest flag or a backup rule) and simplify the disclosure,
+   or keep it and leave the text as is.
+
+Correction to the counts the reviewer quoted: the fixture is 15 rows but 14
+distinct headwords — `dog` appears twice. And words outside it are not all
+dead ends; names and places still resolve through the Wikipedia fallback.
 
 Then: `mise run verify` → commit → tag (needs your GPG passphrase, so you run
 `git tag -a v1.0.3 … && git push --follow-tags`) → `mise run release:apk
