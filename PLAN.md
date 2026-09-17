@@ -82,6 +82,7 @@ CC BY-SA 4.0 + attribution files.
 | M10 ✅ | Cross-model review (Codex, 12 findings) actioned: false "nothing leaves your device" claim corrected, PROCESS_TEXT input bounded, as-typed candidate added so non-ASCII headwords (`Übermensch`) stop falling through to Wikipedia, bundled-DB extraction made atomic, SQLite handles closed in the trampoline and receivers, download verification counts real rows instead of trusting `meta`, stale-download reconciliation, `PAUSED_QUEUED_FOR_WIFI` handled, TTS engine dropped when unusable, word page re-resolves after a dictionary install. Search field moved to the bottom of the screen | `mise run verify` green; bottom-bar layout verified on device with a docked keyboard |
 | M11a ✅ | Corpus published as release `wiki-en-top-v1` (23.8 MB gz) and the in-app download driven end to end on the emulator against the real URL | **R8 release build re-smoke-tested 2026-08-06** (M7's predates the corpus code): minified APK downloads the corpus and answers "Acrocanthosaurus" in airplane mode, no crash — minification does not touch the `WikiCorpus`/`CorpusDownloader` path |
 | M11 ✅ | Offline Wikipedia, opt-in: `etl/build_wiki.py` turns a Kiwix mini ZIM into a 37.9 MB SQLite of 49,918 lead paragraphs + 823,870 aliases (their curation, our format — 6.9× smaller than the ZIM, libzim build-time only so nothing GPL ships). Rows are raw DEFLATE against a preset dictionary stored in the file. `DictionaryDownloader` generalised to `CorpusDownloader` + `Corpus` so two data sets can coexist. Offered from About → Storage & data; tried before the network in both the app and the trampoline | 5 `WikiCorpusTest` cases (round-trip, exact-case-beats-NOCASE, alias, missing corpus, unknown title); ETL self-asserts a round-trip; **verified on device in airplane mode** — "Accenture" and "Acrocanthosaurus" answered from the corpus with no network |
+| M12 ✅ | Distribution. Play listing + closed testing (blocked on Google's 12-tester rule, not on us); GitHub releases v1.0.0–v1.0.2; F-Droid [RFP #4275](https://gitlab.com/fdroid/rfp/-/issues/4275) → [fdroiddata MR !46415](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46415) with **reproducible builds**: F-Droid rebuilds the tagged commit and republishes our own signed APK (`Binaries:` + `AllowedAPKSigningKeys`), so GitHub and F-Droid installs update across each other. `mise run release:apk <tag>` is the only supported way to cut a release APK — clean checkout of the tag, `apksigcopier` verify against an unsigned build of the same commit | F-Droid CI `fdroid build`: *"compared built binary to supplied reference binary successfully"* + allowed signer, 9/9 jobs green on `2305c958`; independent volunteer device test 2026-09-17 (API 34, 13-min packet capture): two network peers total — resolver and `en.wikipedia.org` — no trackers, no update check, no connection on start |
 
 ## Known gaps at launch (deliberate, not forgotten)
 
@@ -98,6 +99,10 @@ CC BY-SA 4.0 + attribution files.
 - **No settings screen.** Theme follows the system, notifications are managed by
   the platform's own channel UI, and storage/data now live on the About screen;
   there is still no toggle that earns a screen of its own.
+- **`android:allowBackup` is undeclared, so it defaults to true.** Both corpora
+  sit in `no_backup/`, but `databases/history.db` — recents and favourites, i.e.
+  the words someone looked up — is swept into cloud backup. Not deliberate;
+  fix before the next release (see `STATE.md`).
 
 ## Geiger audit (2026-07-29, direct-read mode; repo < 50 files)
 
