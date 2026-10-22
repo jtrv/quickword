@@ -34,8 +34,10 @@ import io.github.jtrv.quickword.data.HistoryStore
 import io.github.jtrv.quickword.data.Suggestion
 import io.github.jtrv.quickword.data.WikiCorpus
 import io.github.jtrv.quickword.data.WikipediaApi
+import io.github.jtrv.quickword.lookup.lookupCandidates
 import io.github.jtrv.quickword.ui.about.AboutScreen
 import io.github.jtrv.quickword.ui.search.SearchScreen
+import io.github.jtrv.quickword.ui.word.SelectableLookup
 import io.github.jtrv.quickword.ui.word.WikiScreen
 import io.github.jtrv.quickword.ui.word.WordScreen
 import kotlinx.coroutines.launch
@@ -143,6 +145,11 @@ fun QuickWordApp(
                             }
                         },
                         onSynonymClick = { openWord = it },
+                        onLookupSelection = { selection ->
+                            scope.launch {
+                                repository.resolveSelection(selection)?.let { openWord = it }
+                            }
+                        },
                     )
                 }
                 else ->
@@ -157,6 +164,16 @@ fun QuickWordApp(
             }
         }
     }
+}
+
+/**
+ * The notification path's resolution: first dictionary hit among the
+ * candidates, else the phrase as typed (which then goes to Wikipedia).
+ */
+private suspend fun DictionaryRepository.resolveSelection(selection: String): String? {
+    val candidates = lookupCandidates(selection)
+    if (candidates.isEmpty()) return null
+    return lookup(candidates).firstOrNull()?.word ?: candidates.first()
 }
 
 /** Keeps the nullable-corpus plumbing out of [QuickWordApp]'s own branching. */
@@ -204,17 +221,20 @@ private fun OpenWord(
     favourite: Boolean,
     onToggleFavourite: (String) -> Unit,
     onSynonymClick: (String) -> Unit,
+    onLookupSelection: (String) -> Unit,
 ) {
     when (lookup) {
         null -> Resolving()
         is LookupResult.Entries ->
-            WordScreen(
-                entries = lookup.entries,
-                favourite = favourite,
-                onToggleFavourite = { onToggleFavourite(lookup.entries.first().word) },
-                onSynonymClick = onSynonymClick,
-            )
-        is LookupResult.Wiki -> WikiScreen(summary = lookup.summary)
+            SelectableLookup(onLookupSelection) {
+                WordScreen(
+                    entries = lookup.entries,
+                    favourite = favourite,
+                    onToggleFavourite = { onToggleFavourite(lookup.entries.first().word) },
+                    onSynonymClick = onSynonymClick,
+                )
+            }
+        is LookupResult.Wiki -> SelectableLookup(onLookupSelection) { WikiScreen(summary = lookup.summary) }
         LookupResult.None -> NoEntry(word)
     }
 }
