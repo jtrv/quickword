@@ -1,0 +1,4 @@
+Text on word and Wikipedia pages is now selectable: pick QuickWord in the
+selection menu to look it up without leaving the app. The store description
+now matches what ships: a few sample words bundled, the full dictionary
+downloaded when you tap Download.

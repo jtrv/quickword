@@ -14,6 +14,9 @@ Features:
 • Pronunciation (IPA + text-to-speech)
 • No ads, no tracking, no accounts. MIT licensed.
 
-The full dictionary (~120 MB) is downloaded once on first run; a small
-starter dictionary is bundled so the app works immediately. The offline
-Wikipedia pack (38 MB) is optional; get it from About → Storage & data.
+Only a handful of sample words are bundled. The full dictionary (~120 MB)
+downloads when you tap Download on the home screen, once; on a metered
+connection the app asks first and offers to wait for Wi-Fi. Until then, words
+outside the sample still resolve through the Wikipedia fallback when online.
+The offline Wikipedia pack (38 MB) is optional; get it from About → Storage &
+data.

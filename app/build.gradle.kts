@@ -23,8 +23,8 @@ android {
         applicationId = "io.github.jtrv.quickword"
         minSdk = 26
         targetSdk = 37
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 4
+        versionName = "1.0.3"
     }
 
     // AGP puts a Google-encrypted dependency blob in the signing block; F-Droid

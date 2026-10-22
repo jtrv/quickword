@@ -1,60 +1,44 @@
 # State
 
 Volatile cursor for work in flight. `PLAN.md` is the stable record; this file
-is replaced in place. Last refreshed 2026-09-17.
+is replaced in place. Last refreshed 2026-10-21.
 
 ## Objective
 
-QuickWord 1.0.x is shipped and in both stores' pipelines. Remaining work is
-closing out the two findings from the F-Droid device review, then keeping the
-distribution channels fed.
+Get QuickWord merged into F-Droid, then keep the distribution channels fed.
 
 ## Where things stand
 
-- `main` at `d42462c`, clean, CI green ([run 34912299927](https://github.com/jtrv/quickword/actions/runs/34912299927)).
-- Released: v1.0.2 (`versionCode` 3, commit `1346b69`), APK attached to the
-  GitHub release and pinned by the F-Droid recipe.
-- **F-Droid** — MR !46415, one commit on `io.github.jtrv.quickword` (fork
-  `jtrv/fdroiddata`), head `2305c958`, labels `New App`,
-  `reproducible-builds`, `review-requested`. Pipeline 9/9 green; packagers are
-  working through a long queue. A volunteer reviewer posted a full device test
-  on 2026-09-17 (see next actions). **Any new release must update this MR** —
-  bump `versionName`/`versionCode`/`commit` in
-  `metadata/io.github.jtrv.quickword.yml` and push to that branch.
+- `main` carries the 1.0.3 release commit (`versionCode` 4), verify green,
+  **not yet tagged**. 1.0.3 = in-app lookup of selected text, corrected store
+  description, `android:allowBackup="true"` declared explicitly.
+- Released: v1.0.2 (`versionCode` 3, commit `1346b69`).
+- **F-Droid** — MR !46415 was closed for inactivity on 2026-10-16 (linsui's
+  2026-09-18 request for AntiFeatures went unanswered). Reopened 2026-10-21
+  with commit `97be1554` adding `NonFreeNet` (Wikipedia lookups, GitHub
+  downloads), and replied to linsui and the device reviewer promising 1.0.3.
+  The recipe still pins 1.0.2.
 - **Play** — listing and content done; blocked on Google's closed-testing
-  requirement (12 testers for 14 days), which is an accounts problem, not a
-  code one. The 1.0.2 AAB builds with `mise run bundle` but has not been
-  uploaded.
+  requirement (12 testers for 14 days). Nothing uploaded since 1.0.2's AAB.
 - Local fdroiddata clone with full history (needed for pushes — see decisions):
   `~/.cache/quickword-rb/fdroiddata`.
 
 ## Next action
 
-Cut **v1.0.3** carrying both fixes from the device review:
+1. You: `git tag -a v1.0.3 -m "QuickWord 1.0.3" && git push --follow-tags`
+   (needs your GPG passphrase).
+2. `mise run release:apk v1.0.3`, then `gh release create v1.0.3
+   dist/quickword-1.0.3.apk --title "QuickWord 1.0.3" --notes-file
+   fastlane/metadata/android/en-US/changelogs/4.txt`.
+3. In the fdroiddata clone: bump the recipe to 1.0.3 / 4 / full commit hash,
+   `CurrentVersion`/`CurrentVersionCode`; `fdroid lint` via `uvx --from
+   fdroidserver fdroid lint io.github.jtrv.quickword`; push as a new commit
+   (no amend, no force-push).
+4. Comment on !46415 that 1.0.3 is in and the pipeline is green. Then mark
+   PLAN.md M13 done.
 
-1. **Store description is wrong about the bundled dictionary.**
-   `fastlane/metadata/android/en-US/full_description.txt` says "a small starter
-   dictionary is bundled so the app works immediately" and that the full
-   dictionary "is downloaded once on first run". The bundle is a 15-word
-   fixture (`bona fide, dictionary, dog, don't, hound, ice, ice cream, lexicon,
-   petrichor, quick, serendipity, thesaurus, well-being, word`) and nothing
-   downloads automatically — the user taps **Download** on the home-screen
-   banner. Reword to match what ships; the metered-network confirm dialog is
-   better than the current text promises, so describe it.
-2. **`android:allowBackup` defaults to true**, so `databases/history.db`
-   (recents and favourites) goes to cloud backup. `PRIVACY.md` already
-   discloses this accurately, so it is a decision rather than a bug: exclude
-   the database (manifest flag or a backup rule) and simplify the disclosure,
-   or keep it and leave the text as is.
-
-Correction to the counts the reviewer quoted: the fixture is 15 rows but 14
-distinct headwords — `dog` appears twice. And words outside it are not all
-dead ends; names and places still resolve through the Wikipedia fallback.
-
-Then: `mise run verify` → commit → tag (needs your GPG passphrase, so you run
-`git tag -a v1.0.3 … && git push --follow-tags`) → `mise run release:apk
-v1.0.3` → `gh release create` → update MR !46415 to versionCode 4 → reply to
-the reviewer.
+Backup decision (2026-10-21): keep recents/favourites in Android backup;
+`PRIVACY.md` already discloses it, so its text stays.
 
 ## Decisions
 
