@@ -9,15 +9,15 @@ Get QuickWord merged into F-Droid, then keep the distribution channels fed.
 
 ## Where things stand
 
-- `main` carries the 1.0.3 release commit (`versionCode` 4), verify green,
-  **not yet tagged**. 1.0.3 = in-app lookup of selected text, corrected store
-  description, `android:allowBackup="true"` declared explicitly.
-- Released: v1.0.2 (`versionCode` 3, commit `1346b69`).
+- `main` clean, verify green.
+- Released: v1.0.3 (`versionCode` 4, commit `e1e3ec7`): in-app lookup of
+  selected text, corrected store description, `allowBackup` declared.
 - **F-Droid** — MR !46415 was closed for inactivity on 2026-10-16 (linsui's
   2026-09-18 request for AntiFeatures went unanswered). Reopened 2026-10-21
   with commit `97be1554` adding `NonFreeNet` (Wikipedia lookups, GitHub
   downloads), and replied to linsui and the device reviewer promising 1.0.3.
-  The recipe still pins 1.0.2.
+  Recipe bumped to 1.0.3 (`d1078326`); pipeline 9/9 green with the rebuild
+  verified against the release APK. Waiting on packager review.
 - **Play** — listing and content done; blocked on Google's closed-testing
   requirement (12 testers for 14 days). Nothing uploaded since 1.0.2's AAB.
 - Local fdroiddata clone with full history (needed for pushes — see decisions):
@@ -25,17 +25,8 @@ Get QuickWord merged into F-Droid, then keep the distribution channels fed.
 
 ## Next action
 
-1. You: `git tag -a v1.0.3 -m "QuickWord 1.0.3" && git push --follow-tags`
-   (needs your GPG passphrase).
-2. `mise run release:apk v1.0.3`, then `gh release create v1.0.3
-   dist/quickword-1.0.3.apk --title "QuickWord 1.0.3" --notes-file
-   fastlane/metadata/android/en-US/changelogs/4.txt`.
-3. In the fdroiddata clone: bump the recipe to 1.0.3 / 4 / full commit hash,
-   `CurrentVersion`/`CurrentVersionCode`; `fdroid lint` via `uvx --from
-   fdroidserver fdroid lint io.github.jtrv.quickword`; push as a new commit
-   (no amend, no force-push).
-4. Comment on !46415 that 1.0.3 is in and the pipeline is green. Then mark
-   PLAN.md M13 done.
+Wait for F-Droid review on !46415 and answer it promptly: the last closure
+was for a month of silence. Any new release must bump that MR.
 
 Backup decision (2026-10-21): keep recents/favourites in Android backup;
 `PRIVACY.md` already discloses it, so its text stays.
