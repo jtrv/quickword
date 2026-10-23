@@ -16,8 +16,9 @@ Get QuickWord merged into F-Droid, then keep the distribution channels fed.
   2026-09-18 request for AntiFeatures went unanswered). Reopened 2026-10-21
   with commit `97be1554` adding `NonFreeNet` (Wikipedia lookups, GitHub
   downloads), and replied to linsui and the device reviewer promising 1.0.3.
-  Recipe bumped to 1.0.3 (`d1078326`); pipeline 9/9 green with the rebuild
-  verified against the release APK. Waiting on packager review.
+  2026-10-22 linsui asked to drop old versions and rebase: done as one
+  commit `86809a69` on master (1.0.3 only), pipeline 9/9 green with the
+  rebuild verified, both threads answered and resolved. Waiting on review.
 - **Play** — listing and content done; blocked on Google's closed-testing
   requirement (12 testers for 14 days). Nothing uploaded since 1.0.2's AAB.
 - Local fdroiddata clone with full history (needed for pushes — see decisions):
